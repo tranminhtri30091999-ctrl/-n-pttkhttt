@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Milky Leaf - Nhân viên sản phẩm</title>
+  <link rel="stylesheet" href="../../static/css/client.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="../client/index.html">🧋 Milky Leaf</a>
+    <nav class="site-nav">
+      <a href="../client/index.html">Trang chủ</a>
+      <a href="products.html">Sản phẩm</a>
+      <a href="orders.html">Đơn hàng</a>
+      <a href="dashboard.html">Báo cáo</a>
+    </nav>
+    <div class="auth-actions">
+      <span class="role-badge">Staff</span>
+      <button class="btn btn-secondary" type="button" onclick="logout()">Đăng xuất</button>
+    </div>
+  </header>
+  <main>
+    <section class="section">
+      <h1>Quản lý sản phẩm</h1>
+      <p>Khu vực nhân viên: thêm, sửa, xóa sản phẩm.</p>
+    </section>
+  </main>
+  <script>
+    async function logout() {
+      await fetch('/admin/logout', { method: 'POST', credentials: 'same-origin' });
+      window.location.href = '../client/login.html';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Milky Leaf - Thanh toán</title>
+  <link rel="stylesheet" href="../../static/css/client.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">🧋 Milky Leaf</a>
+    <nav class="site-nav">
+      <a href="index.html">Trang chủ</a>
+      <a href="storeproduct.html">Sản phẩm</a>
+      <a href="checkout.html">Giỏ hàng</a>
+    </nav>
+    <div class="auth-actions">
+      <a class="btn btn-secondary" href="login.html">Đăng nhập</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="section checkout">
+      <h1>Thanh toán / Đặt hàng</h1>
+      <form class="checkout-form">
+        <label>
+          Họ và tên
+          <input type="text" name="name" required />
+        </label>
+        <label>
+          Số điện thoại
+          <input type="tel" name="phone" required />
+        </label>
+        <label>
+          Địa chỉ giao hàng
+          <textarea name="address" rows="3" required></textarea>
+        </label>
+        <button class="btn btn-primary" type="submit">Xác nhận đặt hàng</button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2026 Milky Leaf. All rights reserved.</p>
+  </footer>
+  <script src="../../static/js/client.js"></script>
+</body>
+</html>

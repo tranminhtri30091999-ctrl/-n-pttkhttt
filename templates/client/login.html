@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Milky Leaf - Đăng nhập</title>
+  <link rel="stylesheet" href="../../static/css/client.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">🧋 Milky Leaf</a>
+    <nav class="site-nav">
+      <a href="index.html">Trang chủ</a>
+      <a href="storeproduct.html">Sản phẩm</a>
+      <a href="checkout.html">Giỏ hàng</a>
+    </nav>
+    <div class="auth-actions">
+      <a class="btn btn-secondary" href="login.html">Đăng nhập</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="section checkout">
+      <h1>Đăng nhập</h1>
+      <p>Chọn vai trò để vào đúng khu vực phân quyền.</p>
+      <form class="checkout-form" id="login-form">
+        <label>
+          Tên đăng nhập
+          <input type="text" name="username" required />
+        </label>
+        <label>
+          Mật khẩu
+          <input type="password" name="password" required />
+        </label>
+        <p class="login-note">Vai trò được xác định bởi tài khoản backend.</p>
+        <button class="btn btn-primary" type="submit">Đăng nhập</button>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async function (event) {
+      event.preventDefault();
+      const username = this.username.value;
+      const password = this.password.value;
+      try {
+        const response = await fetch('/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          alert(data.error || 'Đăng nhập thất bại');
+          return;
+        }
+        localStorage.setItem('milkyLeafRole', data.user.role);
+        window.location.href = 'index.html';
+      } catch (error) {
+        alert('Không kết nối được backend. Hãy chạy python app.py và mở http://127.0.0.1:5000/client/login.html');
+      }
+    });
+  </script>
+</body>
+</html>
