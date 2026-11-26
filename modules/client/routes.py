@@ -1,8 +1,10 @@
 from functools import wraps
+import sqlite3
 
 from flask import Blueprint, jsonify, render_template, request, session
 
 from database.db_helper import get_db
+from modules.order.services import transition_order_status
 
 client_bp = Blueprint("client", __name__)
 
@@ -212,6 +214,9 @@ def create_customer_order():
             )
             db.execute("UPDATE products SET stock = stock - ? WHERE id = ?", (quantity, product_id))
         db.commit()
+    except sqlite3.OperationalError:
+        db.rollback()
+        return jsonify({"ok": False, "error": "Cơ sở dữ liệu đang bận. Vui lòng thử lại."}), 503
     except Exception:
         db.rollback()
         return jsonify({"ok": False, "error": "Không thể tạo đơn hàng lúc này. Vui lòng thử lại."}), 500
@@ -219,3 +224,30 @@ def create_customer_order():
         db.close()
 
     return jsonify({"ok": True, "order_id": order_id, "total": total}), 201
+
+
+@client_bp.route("/api/client/orders/<int:order_id>/cancel", methods=["POST"])
+def cancel_customer_order(order_id):
+    auth_error = customer_api_required()
+    if auth_error:
+        return auth_error
+    db = get_db()
+    try:
+        result, error = transition_order_status(
+            db, order_id, "cancelled", customer_id=session["user_id"]
+        )
+        if error == "not_found":
+            return jsonify({"ok": False, "error": "Không tìm thấy đơn hàng."}), 404
+        if error == "invalid_transition":
+            return jsonify({"ok": False, "error": "Chỉ đơn đang chờ mới có thể được khách hàng hủy."}), 409
+        if error == "product_missing":
+            return jsonify({"ok": False, "error": "Không thể hoàn kho vì sản phẩm trong đơn không còn tồn tại."}), 409
+        return jsonify({"ok": True, "order": result})
+    except sqlite3.OperationalError:
+        db.rollback()
+        return jsonify({"ok": False, "error": "Cơ sở dữ liệu đang bận. Vui lòng thử lại."}), 503
+    except Exception:
+        db.rollback()
+        return jsonify({"ok": False, "error": "Không thể hủy đơn hàng lúc này."}), 500
+    finally:
+        db.close()

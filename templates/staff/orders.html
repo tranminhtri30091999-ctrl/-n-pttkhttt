@@ -4,33 +4,89 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Milky Leaf - Nhân viên đơn hàng</title>
-  <link rel="stylesheet" href="../../static/css/client.css" />
+  <link rel="stylesheet" href="/static/css/client.css" />
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="../client/index.html">🧋 Milky Leaf</a>
+    <a class="brand" href="/client/index.html">🧋 Milky Leaf</a>
     <nav class="site-nav">
-      <a href="../client/index.html">Trang chủ</a>
-      <a href="products.html">Sản phẩm</a>
-      <a href="orders.html">Đơn hàng</a>
-      <a href="dashboard.html">Báo cáo</a>
+      <a href="/client/index.html">Trang chủ</a><a href="/staff/products.html">Sản phẩm</a>
+      <a href="/staff/orders.html">Đơn hàng</a><a href="/staff/dashboard.html">Báo cáo</a>
     </nav>
-    <div class="auth-actions">
-      <span class="role-badge">Staff</span>
-      <button class="btn btn-secondary" type="button" onclick="logout()">Đăng xuất</button>
-    </div>
+    <div class="auth-actions"><span class="role-badge">Staff</span><button class="btn btn-secondary" type="button" id="logout-button">Đăng xuất</button></div>
   </header>
   <main>
     <section class="section">
       <h1>Duyệt / hủy đơn hàng</h1>
-      <p>Duyệt đơn sẽ giảm tồn kho; hủy đơn sẽ hoàn trả tồn kho.</p>
+      <p class="muted">Tồn kho đã được giữ khi khách đặt hàng. Duyệt đơn không trừ kho lần nữa; hủy đơn sẽ hoàn kho một lần.</p>
+      <p class="status-message" data-staff-message role="status">Đang tải đơn hàng…</p>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Mã</th><th>Khách hàng</th><th>Sản phẩm</th><th>Tổng</th><th>Trạng thái</th><th>Ngày tạo</th><th>Thao tác</th></tr></thead>
+          <tbody data-staff-orders><tr><td colspan="7">Đang tải…</td></tr></tbody>
+        </table>
+      </div>
     </section>
   </main>
   <script>
-    async function logout() {
-      await fetch('/admin/logout', { method: 'POST', credentials: 'same-origin' });
-      window.location.href = '../client/login.html';
+    const money = (value) => new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(Number(value) || 0) + 'đ';
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    const statusLabels = {pending:'Đang chờ', approved:'Đã duyệt', cancelled:'Đã hủy'};
+
+    async function loadOrders() {
+      const tbody = document.querySelector('[data-staff-orders]');
+      const message = document.querySelector('[data-staff-message]');
+      tbody.innerHTML = '<tr><td colspan="7">Đang tải…</td></tr>';
+      try {
+        const response = await fetch('/staff/api/orders', {credentials:'same-origin'});
+        const data = await response.json();
+        if (response.status === 401 || response.status === 403) {
+          message.innerHTML = 'Bạn cần đăng nhập bằng tài khoản nhân viên hoặc admin. <a href="/client/login.html">Đăng nhập</a>.';
+          tbody.replaceChildren();
+          return;
+        }
+        if (!response.ok || !data.ok) throw new Error(data.error || 'Không thể tải đơn hàng.');
+        message.textContent = data.orders.length ? '' : 'Chưa có đơn hàng.';
+        if (!data.orders.length) { tbody.replaceChildren(); return; }
+        tbody.innerHTML = data.orders.map((order) => {
+          const items = order.items.map((item) => `${escapeHtml(item.name || 'Sản phẩm')} × ${Number(item.quantity)}`).join('<br>');
+          let actions = '—';
+          if (order.status === 'pending') actions = `<button class="btn btn-primary" data-action="approve" data-id="${Number(order.id)}">Duyệt</button> <button class="btn btn-secondary" data-action="cancel" data-id="${Number(order.id)}">Hủy</button>`;
+          else if (order.status === 'approved') actions = `<button class="btn btn-secondary" data-action="cancel" data-id="${Number(order.id)}">Hủy / hoàn kho</button>`;
+          return `<tr><td>#${Number(order.id)}</td><td>${escapeHtml(order.customer_name)}<br><span class="small">${escapeHtml(order.phone)} · ${escapeHtml(order.username)}</span><br><span class="small">${escapeHtml(order.delivery_address)}</span></td><td>${items || '—'}</td><td>${money(order.total)}</td><td>${escapeHtml(statusLabels[order.status] || order.status)}</td><td>${escapeHtml(order.created_at)}</td><td>${actions}</td></tr>`;
+        }).join('');
+      } catch (error) {
+        message.textContent = error.message;
+        message.className = 'status-message error-message';
+        tbody.replaceChildren();
+      }
     }
+
+    document.querySelector('[data-staff-orders]').addEventListener('click', async (event) => {
+      const button = event.target.closest('button[data-action]');
+      if (!button) return;
+      const action = button.dataset.action;
+      const orderId = Number(button.dataset.id);
+      if (action === 'cancel' && !window.confirm(`Hủy đơn #${orderId} và hoàn lại tồn kho?`)) return;
+      button.disabled = true;
+      try {
+        const response = await fetch(`/staff/api/orders/${orderId}/${action}`, {
+          method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:'{}'
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.error || 'Không thể cập nhật đơn.');
+        await loadOrders();
+      } catch (error) {
+        alert(error.message);
+        button.disabled = false;
+      }
+    });
+
+    document.getElementById('logout-button').addEventListener('click', async () => {
+      await fetch('/admin/logout', {method:'POST', credentials:'same-origin'});
+      window.location.href = '/client/login.html';
+    });
+    loadOrders();
   </script>
 </body>
 </html>
