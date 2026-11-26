@@ -194,7 +194,7 @@ def create_customer_order():
                 return jsonify({"ok": False, "error": "Một sản phẩm không còn tồn tại."}), 409
             if product["stock"] < quantity:
                 db.rollback()
-                return jsonify({"ok": False, "error": f\"Sản phẩm {product['name']} chỉ còn {product['stock']} sản phẩm.\"}), 409
+                return jsonify({"ok": False, "error": f"Sản phẩm {product['name']} chỉ còn {product['stock']} sản phẩm."}), 409
             products[product_id] = product
 
         total = sum(products[pid]["price"] * quantity for pid, quantity in quantities.items())
