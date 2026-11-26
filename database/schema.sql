@@ -20,6 +20,9 @@ CREATE TABLE IF NOT EXISTS orders (
     customer_id INTEGER NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending',
     total REAL NOT NULL DEFAULT 0,
+    customer_name TEXT NOT NULL DEFAULT '',
+    phone TEXT NOT NULL DEFAULT '',
+    delivery_address TEXT NOT NULL DEFAULT '',
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (customer_id) REFERENCES users (id)
 );
