@@ -3,34 +3,58 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Milky Leaf - Hóa đơn</title>
-  <link rel="stylesheet" href="../../static/css/client.css" />
+  <title>Milky Leaf - Hoá đơn</title>
+  <link rel="stylesheet" href="/static/css/admin.css" />
 </head>
-<body>
-  <header class="site-header">
-    <a class="brand" href="../client/index.html">🧋 Milky Leaf</a>
-    <nav class="site-nav">
-      <a href="../client/index.html">Trang chủ</a>
-      <a href="products.html">Sản phẩm</a>
-      <a href="orders.html">Đơn hàng</a>
-      <a href="dashboard.html">Báo cáo</a>
-    </nav>
-    <div class="auth-actions">
-      <span class="role-badge">Staff</span>
-      <button class="btn btn-secondary" type="button" onclick="logout()">Đăng xuất</button>
-    </div>
-  </header>
-  <main>
-    <section class="section">
-      <h1>Hóa đơn bán hàng</h1>
-      <p>Xem và in hóa đơn theo thời điểm tùy chọn.</p>
+<body class="admin">
+  <!-- Cột điều hướng cố định (sidebar luôn hiển thị) -->
+  {% include 'staff/_sidebar.html' %}
+
+  <!-- Nội dung tương ứng với mục đang chọn -->
+  <main class="admin-main">
+    <header class="page-head">
+      <div>
+        <h1>Hoá đơn &amp; Lưu trữ</h1>
+        <p>Xem và in hóa đơn theo thời điểm tùy chọn.</p>
+      </div>
+    </header>
+
+    <section class="panel">
+      <h2>Nội dung trang</h2>
+      <div class="empty-state">
+        <strong>Khu vực này đang chờ TV5 cập nhật.</strong>
+        <p>Chức năng xem / in hóa đơn sẽ hiển thị tại đây.</p>
+      </div>
     </section>
   </main>
+
   <script>
+    async function api(url, options) {
+      const res = await fetch(url, Object.assign(
+        { credentials: 'same-origin' }, options || {}
+      ));
+      if (res.status === 401 || res.status === 403) {
+        window.location.href = '/client/login.html';
+        throw new Error('unauthorized');
+      }
+      return res.json();
+    }
+
+    async function loadWho() {
+      try {
+        const data = await api('/admin/me');
+        if (data.ok) {
+          document.getElementById('who-name').textContent = data.user.username;
+        }
+      } catch (error) { /* redirect handled in api() */ }
+    }
+
     async function logout() {
       await fetch('/admin/logout', { method: 'POST', credentials: 'same-origin' });
-      window.location.href = '../client/login.html';
+      window.location.href = '/client/login.html';
     }
+
+    loadWho();
   </script>
 </body>
 </html>

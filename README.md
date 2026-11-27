@@ -36,20 +36,21 @@ he-thong-ban-hang/
 │       └── services.py        # Tính doanh thu, lọc hóa đơn theo ngày
 │
 ├── templates/                 # Chứa giao diện HTML
-│   ├── admin/                 # TV1: Giao diện quản trị Admin riêng biệt
-│   │   └── users.html
+│   ├── admin/                 # TV1: Giao diện quản trị Admin (chỉ trang tài khoản)
+│   │   └── users.html         # Trang Quản lý tài khoản (sidebar + thêm/sửa/xóa user)
 │   ├── staff/                 # Giao diện dành cho Nhân viên bán hàng
-│   │   ├── products.html      # TV2: Màn hình CRUD sản phẩm
-│   │   ├── orders.html        # TV4: Màn hình Duyệt/Hủy đơn hàng
-│   │   ├── bills.html         # TV5: Màn hình hóa đơn
-│   │   └── dashboard.html     # TV5: Màn hình báo cáo doanh thu
+│   │   ├── _sidebar.html      # Cột điều hướng dùng chung (sidebar luôn hiển thị)
+│   │   ├── products.html      # TV2: Màn hình CRUD sản phẩm (đang cập nhật)
+│   │   ├── orders.html        # Trang Quản trị bán hàng (sidebar + duyệt/huỷ/in đơn)
+│   │   ├── bills.html         # TV5: Màn hình hóa đơn (đang cập nhật)
+│   │   └── dashboard.html     # TV5: Màn hình báo cáo doanh thu (đang cập nhật)
 │   └── client/                # TV3: Giao diện người mua hàng
 │       ├── index.html         # Trang danh mục & bộ lọc
 │       └── checkout.html      # Trang thanh toán / đặt hàng
 │
 ├── static/                    # Tài nguyên tĩnh dùng chung
 │   ├── css/                   # Style CSS cho từng phân hệ
-│   │   ├── admin.css
+│   │   ├── admin.css          # Layout admin: sidebar + main content
 │   │   ├── staff.css
 │   │   └── client.css
 │   ├── js/                    # JavaScript xử lý phía Client/Staff

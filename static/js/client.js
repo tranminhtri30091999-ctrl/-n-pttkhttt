@@ -13,7 +13,9 @@ async function refreshAuthUI() {
     const user = data.user;
     let html = '<span class="user-name">' + user.username + '</span>';
     if (user.role === 'admin') {
-      html += '<a class="btn btn-secondary" href="../admin/users.html">Admin</a>';
+      html += '<a class="btn btn-secondary" href="/staff/orders.html">Admin</a>';
+    } else if (user.role === 'staff') {
+      html += '<a class="btn btn-secondary" href="/staff/orders.html">Nhân viên</a>';
     }
     html += '<button class="btn btn-secondary" type="button" onclick="logout()">Đăng xuất</button>';
     container.innerHTML = html;

@@ -1,6 +1,6 @@
 from functools import wraps
 
-from flask import Blueprint, jsonify, render_template, request, session
+from flask import Blueprint, jsonify, redirect, render_template, request, session
 
 from database.db_helper import get_db
 
@@ -89,7 +89,14 @@ def me():
 @admin_bp.route("/users.html", methods=["GET"])
 @role_required("admin")
 def users_page():
-    return render_template("admin/users.html")
+    return render_template("admin/users.html", active_nav="users")
+
+
+@admin_bp.route("/orders.html", methods=["GET"])
+@role_required("admin")
+def orders_page():
+    # Trang quản trị bán hàng đã chuyển sang phân hệ staff dùng chung.
+    return redirect("/staff/orders.html")
 
 
 @admin_bp.route("/api/users", methods=["GET"])

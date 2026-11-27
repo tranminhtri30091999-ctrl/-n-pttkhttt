@@ -3,31 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Milky Leaf - Admin</title>
-  <link rel="stylesheet" href="../../static/css/client.css" />
+  <title>Milky Leaf - Quản lý tài khoản</title>
+  <link rel="stylesheet" href="/static/css/admin.css" />
 </head>
-<body>
-  <header class="site-header">
-    <a class="brand" href="../client/index.html">🧋 Milky Leaf</a>
-    <nav class="site-nav">
-      <a href="../client/index.html">Trang chủ</a>
-      <a href="users.html">Người dùng</a>
-      <a href="../staff/dashboard.html">Báo cáo</a>
-    </nav>
-    <div class="auth-actions">
-      <span class="role-badge">Admin</span>
-      <button class="btn btn-secondary" type="button" onclick="logout()">Đăng xuất</button>
-    </div>
-  </header>
+<body class="admin">
+  <!-- Cột điều hướng cố định (sidebar luôn hiển thị) -->
+  {% include 'staff/_sidebar.html' %}
 
-  <main>
-    <section class="section">
-      <div class="section-head">
-        <h1>Quản lý người dùng</h1>
+  <!-- Nội dung tương ứng với mục đang chọn -->
+  <main class="admin-main">
+    <header class="page-head">
+      <div>
+        <h1>Quản lý tài khoản</h1>
         <p>Thêm, sửa, xóa tài khoản và thay đổi vai trò.</p>
       </div>
+    </header>
 
-      <form class="checkout-form" id="user-form">
+    <section class="panel">
+      <h2 id="form-title">Thêm người dùng</h2>
+      <form class="user-form" id="user-form">
         <input type="hidden" name="id" />
         <label>
           Tên đăng nhập
@@ -46,13 +40,16 @@
           </select>
         </label>
         <div class="form-actions">
-          <button class="btn btn-primary" type="submit" id="submit-btn">Thêm người dùng</button>
-          <button class="btn btn-secondary" type="button" id="cancel-btn" hidden>Hủy sửa</button>
+          <button class="btn btn-approve" type="submit" id="submit-btn">Thêm người dùng</button>
+          <button class="btn btn-cancel" type="button" id="cancel-btn" hidden>Hủy sửa</button>
         </div>
       </form>
+    </section>
 
-      <div class="table-wrap" style="margin-top: 2rem;">
-        <table class="admin-table">
+    <section class="panel panel-gap">
+      <h2>Danh sách tài khoản</h2>
+      <div class="table-scroll">
+        <table class="data">
           <thead>
             <tr>
               <th>ID</th>
@@ -61,7 +58,11 @@
               <th>Thao tác</th>
             </tr>
           </thead>
-          <tbody id="users-body"></tbody>
+          <tbody id="users-body">
+            <tr>
+              <td class="empty-row" colspan="4">Đang tải dữ liệu...</td>
+            </tr>
+          </tbody>
         </table>
       </div>
     </section>
@@ -72,52 +73,96 @@
     const usersBody = document.getElementById('users-body');
     const submitBtn = document.getElementById('submit-btn');
     const cancelBtn = document.getElementById('cancel-btn');
+    const formTitle = document.getElementById('form-title');
 
-    async function loadUsers() {
-      const res = await fetch('/admin/api/users', { credentials: 'same-origin' });
-      const data = await res.json();
-      if (!data.ok) return;
-      usersBody.innerHTML = data.users.map(user => `
-        <tr>
-          <td>${user.id}</td>
-          <td>${user.username}</td>
-          <td><span class="role-badge">${user.role}</span></td>
-          <td>
-            <button class="btn btn-small" onclick="editUser(${user.id}, '${user.username}', '${user.role}')">Sửa</button>
-            <button class="btn btn-small" onclick="deleteUser(${user.id})">Xóa</button>
-          </td>
-        </tr>
-      `).join('');
+    async function api(url, options) {
+      const res = await fetch(url, Object.assign(
+        { credentials: 'same-origin' }, options || {}
+      ));
+      if (res.status === 401 || res.status === 403) {
+        window.location.href = '/client/login.html';
+        throw new Error('unauthorized');
+      }
+      return res.json();
     }
 
-    function editUser(id, username, role) {
-      form.id.value = id;
-      form.username.value = username;
+    async function loadWho() {
+      try {
+        const data = await api('/admin/me');
+        if (data.ok) {
+          document.getElementById('who-name').textContent = data.user.username;
+        }
+      } catch (error) { /* redirect handled in api() */ }
+    }
+
+    const escapeHtml = (value) =>
+      String(value).replace(/[&<>"']/g, (ch) =>
+        '&#' + ch.charCodeAt(0) + ';');
+
+    let usersCache = [];
+
+    async function loadUsers() {
+      try {
+        const data = await api('/admin/api/users');
+        if (!data.ok) throw new Error(data.error || 'Không tải được danh sách');
+        usersCache = data.users;
+        if (!data.users.length) {
+          usersBody.innerHTML =
+            '<tr><td class="empty-row" colspan="4">Chưa có tài khoản nào.</td></tr>';
+          return;
+        }
+        usersBody.innerHTML = data.users.map(user => `
+          <tr>
+            <td class="order-id">${user.id}</td>
+            <td>${escapeHtml(user.username)}</td>
+            <td><span class="badge badge-${escapeHtml(user.role)}">${escapeHtml(user.role)}</span></td>
+            <td>
+              <div class="row-actions">
+                <button class="btn btn-print" onclick="editUser(${user.id})">Sửa</button>
+                <button class="btn btn-cancel" onclick="deleteUser(${user.id})">Xóa</button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        if (error.message !== 'unauthorized') {
+          usersBody.innerHTML =
+            `<tr><td class="empty-row" colspan="4">${escapeHtml(error.message)}</td></tr>`;
+        }
+      }
+    }
+
+    function editUser(id) {
+      const user = usersCache.find(item => item.id === id);
+      if (!user) return;
+      form.id.value = user.id;
+      form.username.value = user.username;
       form.password.value = '';
-      form.role.value = role;
+      form.role.value = user.role;
       submitBtn.textContent = 'Cập nhật người dùng';
+      formTitle.textContent = 'Sửa người dùng';
       cancelBtn.hidden = false;
+      form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function resetForm() {
       form.reset();
       form.id.value = '';
       submitBtn.textContent = 'Thêm người dùng';
+      formTitle.textContent = 'Thêm người dùng';
       cancelBtn.hidden = true;
     }
 
     async function deleteUser(id) {
       if (!confirm('Xóa người dùng này?')) return;
-      const res = await fetch('/admin/api/users/' + id, {
-        method: 'DELETE',
-        credentials: 'same-origin'
-      });
-      const data = await res.json();
-      if (!data.ok) {
-        alert(data.error || 'Xóa thất bại');
-        return;
-      }
-      loadUsers();
+      try {
+        const data = await api('/admin/api/users/' + id, { method: 'DELETE' });
+        if (!data.ok) {
+          alert(data.error || 'Xóa thất bại');
+          return;
+        }
+        loadUsers();
+      } catch (error) { /* redirect handled in api() */ }
     }
 
     form.addEventListener('submit', async (event) => {
@@ -130,28 +175,29 @@
       };
       const url = id ? '/admin/api/users/' + id : '/admin/api/users';
       const method = id ? 'PUT' : 'POST';
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (!data.ok) {
-        alert(data.error || 'Lưu thất bại');
-        return;
-      }
-      resetForm();
-      loadUsers();
+      try {
+        const data = await api(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!data.ok) {
+          alert(data.error || 'Lưu thất bại');
+          return;
+        }
+        resetForm();
+        loadUsers();
+      } catch (error) { /* redirect handled in api() */ }
     });
 
     cancelBtn.addEventListener('click', resetForm);
 
     async function logout() {
       await fetch('/admin/logout', { method: 'POST', credentials: 'same-origin' });
-      window.location.href = '../client/login.html';
+      window.location.href = '/client/login.html';
     }
 
+    loadWho();
     loadUsers();
   </script>
 </body>

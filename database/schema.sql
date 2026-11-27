@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS orders (
     status TEXT NOT NULL DEFAULT 'pending',
     total REAL NOT NULL DEFAULT 0,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    approved_at TEXT,
     FOREIGN KEY (customer_id) REFERENCES users (id)
 );
 
