@@ -1,7 +1,7 @@
-from functools import wraps
 import math
 import re
 import sqlite3
+from functools import wraps
 
 from flask import Blueprint, jsonify, render_template, request, session
 from werkzeug.security import generate_password_hash
@@ -70,10 +70,7 @@ def register_customer():
         return jsonify({"ok": False, "error": "Mật khẩu cần dài từ 8 đến 128 ký tự."}), 400
     db = get_db()
     try:
-        cursor = db.execute(
-            "INSERT INTO users (username, password_hash, role) VALUES (?, ?, 'customer')",
-            (username, generate_password_hash(password)),
-        )
+        cursor = db.execute("INSERT INTO users (username, password_hash, role) VALUES (?, ?, 'customer')", (username, generate_password_hash(password)))
         db.commit()
         session.clear()
         session["user_id"] = cursor.lastrowid
@@ -197,18 +194,20 @@ def create_customer_order():
         products = {}
         for product_id, quantity in quantities.items():
             product = db.execute("SELECT id, name, price, stock FROM products WHERE id = ?", (product_id,)).fetchone()
-            if product is None or product["stock"] < quantity:
+            if product is None:
                 db.rollback()
-                return jsonify({"ok": False, "error": "Sản phẩm không tồn tại hoặc không đủ tồn kho. Hãy cập nhật giỏ hàng."}), 409
+                return jsonify({"ok": False, "error": "Sản phẩm không còn tồn tại."}), 409
+            if product["stock"] < quantity:
+                db.rollback()
+                return jsonify({"ok": False, "error": f"Sản phẩm {product['name']} chỉ còn {product['stock']} sản phẩm."}), 409
             products[product_id] = product
         total = sum(products[pid]["price"] * quantity for pid, quantity in quantities.items())
         cursor = db.execute("INSERT INTO orders (customer_id, status, total, customer_name, phone, delivery_address) VALUES (?, 'pending', ?, ?, ?, ?)", (session["user_id"], total, customer_name, phone, address))
         order_id = cursor.lastrowid
         for product_id, quantity in quantities.items():
-            db.execute("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)", (order_id, product_id, quantity, products[product_id]["price"]))
+            product = products[product_id]
+            db.execute("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)", (order_id, product_id, quantity, product["price"]))
             db.execute("UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?", (quantity, product_id, quantity))
-            if db.execute("SELECT changes()").fetchone()[0] != 1:
-                raise sqlite3.IntegrityError("stock changed")
         db.commit()
         return jsonify({"ok": True, "order_id": order_id, "total": total}), 201
     except sqlite3.OperationalError:

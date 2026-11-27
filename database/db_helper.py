@@ -66,11 +66,9 @@ def init_db():
                 [(u, generate_password_hash(p), r) for u, p, r in seed_users],
             )
 
-        # Insert demo products by name so upgrades keep existing inventory and orders intact.
         for name, price, stock, description, category in DEMO_PRODUCTS:
             conn.execute(
-                """INSERT INTO products (name, price, stock, description, category)
-                   SELECT ?, ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = ?)""",
+                "INSERT INTO products (name, price, stock, description, category) SELECT ?, ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = ?)",
                 (name, price, stock, description, category, name),
             )
         conn.commit()
