@@ -3,8 +3,6 @@ CREATE TABLE IF NOT EXISTS users (
     username TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL CHECK (role IN ('admin', 'staff', 'customer')),
-    full_name TEXT NOT NULL DEFAULT '',
-    phone TEXT UNIQUE,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 

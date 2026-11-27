@@ -44,25 +44,33 @@ def init_db():
     try:
         with open(SCHEMA_PATH, "r", encoding="utf-8") as schema_file:
             conn.executescript(schema_file.read())
-        user_columns = {row["name"] for row in conn.execute("PRAGMA table_info(users)")}
-        if "full_name" not in user_columns:
-            conn.execute("ALTER TABLE users ADD COLUMN full_name TEXT NOT NULL DEFAULT ''")
-        if "phone" not in user_columns:
-            conn.execute("ALTER TABLE users ADD COLUMN phone TEXT")
-        conn.execute("UPDATE users SET full_name = username WHERE full_name IS NULL OR TRIM(full_name) = ''")
+
         existing_columns = {row["name"] for row in conn.execute("PRAGMA table_info(orders)")}
-        for column, definition in (("customer_name", "TEXT NOT NULL DEFAULT ''"), ("phone", "TEXT NOT NULL DEFAULT ''"), ("delivery_address", "TEXT NOT NULL DEFAULT ''")):
+        for column, definition in (
+            ("customer_name", "TEXT NOT NULL DEFAULT ''"),
+            ("phone", "TEXT NOT NULL DEFAULT ''"),
+            ("delivery_address", "TEXT NOT NULL DEFAULT ''"),
+        ):
             if column not in existing_columns:
                 conn.execute(f"ALTER TABLE orders ADD COLUMN {column} {definition}")
+
         product_columns = {row["name"] for row in conn.execute("PRAGMA table_info(products)")}
         if "category" not in product_columns:
             conn.execute("ALTER TABLE products ADD COLUMN category TEXT NOT NULL DEFAULT 'Khác'")
+
         if conn.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0:
             from werkzeug.security import generate_password_hash
             seed_users = [("admin", "admin123", "admin"), ("staff", "staff123", "staff"), ("customer", "customer123", "customer")]
-            conn.executemany("INSERT INTO users (username, password_hash, role, full_name) VALUES (?, ?, ?, ?)", [(u, generate_password_hash(p), r, u) for u, p, r in seed_users])
+            conn.executemany(
+                "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
+                [(u, generate_password_hash(p), r) for u, p, r in seed_users],
+            )
+
         for name, price, stock, description, category in DEMO_PRODUCTS:
-            conn.execute("INSERT INTO products (name, price, stock, description, category) SELECT ?, ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = ?)", (name, price, stock, description, category, name))
+            conn.execute(
+                "INSERT INTO products (name, price, stock, description, category) SELECT ?, ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = ?)",
+                (name, price, stock, description, category, name),
+            )
         conn.commit()
     finally:
         conn.close()

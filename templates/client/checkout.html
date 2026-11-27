@@ -1,4 +1,44 @@
 <!DOCTYPE html>
-<html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Giỏ hàng và thanh toán - Milky Leaf</title><link rel="stylesheet" href="/static/css/client.css"></head><body>
-<header class="site-header"><a class="brand" href="/client/index.html">🧋 Milky Leaf</a><nav class="site-nav"><a href="/client/index.html">Trang chủ</a><a href="/client/storeproduct.html">Sản phẩm</a><a href="/client/orders.html">Đơn hàng</a><a href="/client/checkout.html">Giỏ hàng <span class="cart-count">0</span></a></nav><div class="auth-actions"><a class="btn btn-secondary" href="/client/login.html">Đăng nhập</a><a class="btn btn-primary" href="/client/login.html#register">Đăng ký</a></div></header>
-<main><section class="section"><h1>Giỏ hàng</h1><p class="muted">Giỏ hàng được lưu trên trình duyệt; tồn kho và giá luôn được kiểm tra lại khi đặt hàng.</p><div class="cart-layout"><div class="cart-items" data-cart-items><p class="muted">Đang tải giỏ hàng…</p></div><aside class="cart-summary"><h2>Tóm tắt đơn hàng</h2><p class="summary-line"><span>Tạm tính</span><strong data-cart-total>0đ</strong></p><a class="btn btn-secondary full-width" href="/client/storeproduct.html">Tiếp tục mua hàng</a></aside></div></section><section class="section checkout"><h2>Thông tin nhận hàng</h2><p class="muted">Họ tên và số điện thoại lấy từ tài khoản đăng nhập, không thể thay đổi khi đặt hàng.</p><form class="checkout-form" data-order-form><label>Họ và tên<input type="text" name="customer_name" autocomplete="name" readonly required></label><label>Số điện thoại<input type="tel" name="phone" autocomplete="tel" readonly required></label><label>Địa chỉ giao hàng<textarea name="delivery_address" rows="3" minlength="10" maxlength="500" autocomplete="street-address" required placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"></textarea></label><p class="status-message" data-order-message role="status"></p><button class="btn btn-primary" type="submit">Xác nhận đặt hàng</button></form></section></main><footer class="site-footer"><p>© 2026 Milky Leaf. All rights reserved.</p></footer><div class="toast-region" aria-live="polite"></div><script src="/static/js/client.js"></script></body></html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Milky Leaf - Giỏ hàng và thanh toán</title>
+  <link rel="stylesheet" href="/static/css/client.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/client/index.html">🧋 Milky Leaf</a>
+    <nav class="site-nav"><a href="/client/index.html">Trang chủ</a><a href="/client/storeproduct.html">Sản phẩm</a><a href="/client/checkout.html">Giỏ hàng <span class="cart-count">0</span></a><a href="/client/orders.html">Đơn hàng</a></nav>
+    <div class="auth-actions"><a class="btn btn-secondary" href="/client/login.html">Đăng nhập</a></div>
+  </header>
+  <main>
+    <section class="section">
+      <h1>Giỏ hàng</h1>
+      <p class="muted">Giỏ hàng được lưu trên trình duyệt này. Giá và tồn kho sẽ được kiểm tra lại khi đặt hàng.</p>
+      <div class="cart-layout">
+        <div class="cart-items" data-cart-items><p class="muted">Đang tải giỏ hàng…</p></div>
+        <aside class="cart-summary">
+          <h2>Tóm tắt đơn hàng</h2>
+          <p class="summary-line"><span>Tạm tính</span><strong data-cart-total>0đ</strong></p>
+          <p class="muted small">Phí giao hàng (nếu có) sẽ được xác nhận khi cửa hàng liên hệ.</p>
+          <a class="btn btn-secondary full-width" href="/client/storeproduct.html">Tiếp tục mua hàng</a>
+        </aside>
+      </div>
+    </section>
+    <section class="section checkout">
+      <h2>Thông tin nhận hàng</h2>
+      <p class="muted">Bạn cần đăng nhập bằng tài khoản khách hàng trước khi xác nhận đơn.</p>
+      <form class="checkout-form" data-order-form>
+        <label>Họ và tên<input type="text" name="customer_name" maxlength="120" autocomplete="name" required /></label>
+        <label>Số điện thoại<input type="tel" name="phone" maxlength="40" autocomplete="tel" required /></label>
+        <label>Địa chỉ giao hàng<textarea name="delivery_address" rows="3" maxlength="500" autocomplete="street-address" required></textarea></label>
+        <p class="status-message" data-order-message role="status"></p>
+        <button class="btn btn-primary" type="submit">Xác nhận đặt hàng</button>
+      </form>
+    </section>
+  </main>
+  <footer class="site-footer"><p>© 2026 Milky Leaf. All rights reserved.</p></footer>
+  <script src="/static/js/client.js"></script>
+</body>
+</html>
