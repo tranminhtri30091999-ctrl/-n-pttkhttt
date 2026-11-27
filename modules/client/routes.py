@@ -4,12 +4,15 @@ import sqlite3
 from functools import wraps
 
 from flask import Blueprint, jsonify, render_template, request, session
-from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from database.db_helper import get_db
 from modules.order.services import transition_order_status
 
 client_bp = Blueprint("client", __name__)
+PHONE_RE = re.compile(r"^0\d{9}$")
+NAME_RE = re.compile(r"^[^\W\d_][\wÀ-ỹ'’.-]*(?:\s+[^\W\d_][\wÀ-ỹ'’.-]*)+$", re.UNICODE)
+SPECIAL_RE = re.compile(r"[^A-Za-z0-9]")
 
 
 def customer_api_required():
@@ -64,22 +67,63 @@ def register_customer():
     data = request.get_json(silent=True) or {}
     username = (data.get("username") or "").strip()
     password = data.get("password") or ""
+    full_name = " ".join((data.get("full_name") or "").split())
+    phone = (data.get("phone") or "").strip()
     if not re.fullmatch(r"[A-Za-z0-9_.-]{3,30}", username):
         return jsonify({"ok": False, "error": "Tên đăng nhập cần dài 3–30 ký tự (chữ, số, ., _ hoặc -)."}), 400
-    if len(password) < 8 or len(password) > 128:
-        return jsonify({"ok": False, "error": "Mật khẩu cần dài từ 8 đến 128 ký tự."}), 400
+    if not NAME_RE.fullmatch(full_name) or len(full_name) < 2 or len(full_name) > 120:
+        return jsonify({"ok": False, "error": "Họ tên phải có ít nhất 2 ký tự và gồm các từ hợp lệ."}), 400
+    if not PHONE_RE.fullmatch(phone):
+        return jsonify({"ok": False, "error": "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0."}), 400
+    if len(password) < 8 or len(password) > 128 or not SPECIAL_RE.search(password):
+        return jsonify({"ok": False, "error": "Mật khẩu cần dài 8–128 ký tự và có ít nhất một ký hiệu đặc biệt."}), 400
     db = get_db()
     try:
-        cursor = db.execute("INSERT INTO users (username, password_hash, role) VALUES (?, ?, 'customer')", (username, generate_password_hash(password)))
+        cursor = db.execute("INSERT INTO users (username, password_hash, role, full_name, phone) VALUES (?, ?, 'customer', ?, ?)", (username, generate_password_hash(password), full_name, phone))
         db.commit()
         session.clear()
         session["user_id"] = cursor.lastrowid
         session["username"] = username
         session["role"] = "customer"
-        return jsonify({"ok": True, "user": {"id": cursor.lastrowid, "username": username, "role": "customer"}}), 201
+        return jsonify({"ok": True, "user": {"id": cursor.lastrowid, "username": username, "role": "customer", "full_name": full_name, "phone": phone}}), 201
     except sqlite3.IntegrityError:
         db.rollback()
-        return jsonify({"ok": False, "error": "Tên đăng nhập đã được sử dụng."}), 409
+        return jsonify({"ok": False, "error": "Tên đăng nhập hoặc số điện thoại đã được sử dụng."}), 409
+    finally:
+        db.close()
+
+
+@client_bp.route("/api/client/login", methods=["POST"])
+def customer_login():
+    data = request.get_json(silent=True) or {}
+    identifier = (data.get("identifier") or "").strip()
+    password = data.get("password") or ""
+    if not identifier or not password:
+        return jsonify({"ok": False, "error": "Vui lòng nhập tên đăng nhập/số điện thoại và mật khẩu."}), 400
+    db = get_db()
+    try:
+        user = db.execute("SELECT id, username, password_hash, role FROM users WHERE username = ? OR phone = ?", (identifier, identifier)).fetchone()
+        if user is None or not check_password_hash(user["password_hash"], password):
+            return jsonify({"ok": False, "error": "Tên đăng nhập/số điện thoại hoặc mật khẩu không đúng."}), 401
+        session.clear()
+        session.update(user_id=user["id"], username=user["username"], role=user["role"])
+        return jsonify({"ok": True, "user": {"id": user["id"], "username": user["username"], "role": user["role"]}})
+    finally:
+        db.close()
+
+
+@client_bp.route("/api/client/profile", methods=["GET"])
+def customer_profile():
+    auth_error = customer_api_required()
+    if auth_error:
+        return auth_error
+    db = get_db()
+    try:
+        row = db.execute("SELECT username, full_name, phone FROM users WHERE id = ?", (session["user_id"],)).fetchone()
+        if row is None:
+            session.clear()
+            return jsonify({"ok": False, "error": "Không tìm thấy tài khoản."}), 404
+        return jsonify({"ok": True, "user": dict(row)})
     finally:
         db.close()
 
@@ -107,7 +151,6 @@ def list_products():
         return jsonify({"ok": False, "error": "Khoảng giá phải là số hợp lệ và không âm."}), 400
     if min_price is not None and max_price is not None and min_price > max_price:
         return jsonify({"ok": False, "error": "Giá từ phải nhỏ hơn hoặc bằng giá đến."}), 400
-
     clauses, params = [], []
     if query:
         clauses.append("name LIKE ?")
@@ -168,12 +211,10 @@ def create_customer_order():
     if auth_error:
         return auth_error
     data = request.get_json(silent=True) or {}
-    customer_name = (data.get("customer_name") or "").strip()
-    phone = (data.get("phone") or "").strip()
-    address = (data.get("delivery_address") or "").strip()
+    address = " ".join((data.get("delivery_address") or "").split())
     items = data.get("items")
-    if not customer_name or not phone or not address or len(customer_name) > 120 or len(phone) > 40 or len(address) > 500:
-        return jsonify({"ok": False, "error": "Vui lòng nhập thông tin giao hàng hợp lệ."}), 400
+    if len(address) < 10 or len(address) > 500 or not re.search(r"[A-Za-zÀ-ỹ0-9]", address):
+        return jsonify({"ok": False, "error": "Địa chỉ cần có ít nhất 10 ký tự và là địa chỉ giao hàng hợp lệ."}), 400
     if not isinstance(items, list) or not items or len(items) > 50:
         return jsonify({"ok": False, "error": "Giỏ hàng đang trống hoặc có quá nhiều mặt hàng."}), 400
     quantities = {}
@@ -191,6 +232,10 @@ def create_customer_order():
     db = get_db()
     try:
         db.execute("BEGIN IMMEDIATE")
+        user = db.execute("SELECT full_name, phone FROM users WHERE id = ? AND role = 'customer'", (session["user_id"],)).fetchone()
+        if user is None or not user["full_name"] or not user["phone"]:
+            db.rollback()
+            return jsonify({"ok": False, "error": "Tài khoản chưa có họ tên hoặc số điện thoại hợp lệ. Vui lòng liên hệ cửa hàng."}), 400
         products = {}
         for product_id, quantity in quantities.items():
             product = db.execute("SELECT id, name, price, stock FROM products WHERE id = ?", (product_id,)).fetchone()
@@ -199,15 +244,17 @@ def create_customer_order():
                 return jsonify({"ok": False, "error": "Sản phẩm không còn tồn tại."}), 409
             if product["stock"] < quantity:
                 db.rollback()
-                return jsonify({"ok": False, "error": f"Sản phẩm {product['name']} chỉ còn {product['stock']} sản phẩm."}), 409
+                return jsonify({"ok": False, "error": f"Sản phẩm {product['name']} hiện chỉ còn {product['stock']} sản phẩm trong kho."}), 409
             products[product_id] = product
         total = sum(products[pid]["price"] * quantity for pid, quantity in quantities.items())
-        cursor = db.execute("INSERT INTO orders (customer_id, status, total, customer_name, phone, delivery_address) VALUES (?, 'pending', ?, ?, ?, ?)", (session["user_id"], total, customer_name, phone, address))
+        cursor = db.execute("INSERT INTO orders (customer_id, status, total, customer_name, phone, delivery_address) VALUES (?, 'pending', ?, ?, ?, ?)", (session["user_id"], total, user["full_name"], user["phone"], address))
         order_id = cursor.lastrowid
         for product_id, quantity in quantities.items():
             product = products[product_id]
             db.execute("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)", (order_id, product_id, quantity, product["price"]))
-            db.execute("UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?", (quantity, product_id, quantity))
+            updated = db.execute("UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?", (quantity, product_id, quantity))
+            if updated.rowcount != 1:
+                raise sqlite3.IntegrityError("stock changed")
         db.commit()
         return jsonify({"ok": True, "order_id": order_id, "total": total}), 201
     except sqlite3.OperationalError:
