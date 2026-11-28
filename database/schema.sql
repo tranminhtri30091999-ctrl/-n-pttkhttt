@@ -9,9 +9,10 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS products (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    price REAL NOT NULL,
+    price REAL NOT NULL CHECK (price >= 0),
     stock INTEGER NOT NULL DEFAULT 0,
     description TEXT,
+    image_url TEXT DEFAULT '',
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 

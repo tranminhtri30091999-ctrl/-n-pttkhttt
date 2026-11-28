@@ -19,6 +19,10 @@ def _migrate(conn):
     if "approved_at" not in order_cols:
         conn.execute("ALTER TABLE orders ADD COLUMN approved_at TEXT")
 
+    product_cols = {row[1] for row in conn.execute("PRAGMA table_info(products)")}
+    if "image_url" not in product_cols:
+        conn.execute("ALTER TABLE products ADD COLUMN image_url TEXT DEFAULT ''")
+
 
 def init_db():
     conn = get_db()

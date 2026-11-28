@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Milky Leaf - Quản lý sản phẩm</title>
   <link rel="stylesheet" href="/static/css/admin.css" />
+  <link rel="stylesheet" href="/static/css/staff.css" />
 </head>
 <body class="admin">
   <!-- Cột điều hướng cố định (sidebar luôn hiển thị) -->
@@ -15,20 +16,163 @@
     <header class="page-head">
       <div>
         <h1>Quản lý sản phẩm</h1>
-        <p>Khu vực nhân viên: thêm, sửa, xóa sản phẩm.</p>
+        <p>Khu vực nhân viên: thêm, sửa, xóa và cập nhật tồn kho sản phẩm.</p>
+      </div>
+      <div class="toolbar">
+        <select class="filter-select" id="stock-filter" aria-label="Lọc theo tồn kho">
+          <option value="">Tất cả trạng thái kho</option>
+          <option value="in_stock">Còn hàng</option>
+          <option value="low_stock" id="low-stock-option">Sắp hết hàng</option>
+          <option value="out_of_stock">Hết hàng</option>
+        </select>
+        <div class="search-box">
+          <svg class="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="search" id="search-input" placeholder="Tìm theo mã, tên, mô tả..."
+                 aria-label="Tìm kiếm sản phẩm" />
+        </div>
       </div>
     </header>
 
+    <!-- Chỉ số tổng quan kho sản phẩm -->
+    <section class="kpi-grid" aria-label="Tổng quan sản phẩm">
+      <div class="kpi-card">
+        <span class="kpi-label">Tổng mặt hàng</span>
+        <strong class="kpi-value" id="kpi-total-products">0</strong>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Tổng tồn kho</span>
+        <strong class="kpi-value" id="kpi-total-stock">0</strong>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Sắp hết / Hết hàng</span>
+        <strong class="kpi-value" id="kpi-low-stock">0</strong>
+      </div>
+    </section>
+
+    <div class="status-banner" id="status-banner" role="status" hidden></div>
+
+    <!-- Biểu mẫu thêm / sửa sản phẩm -->
     <section class="panel">
-      <h2>Nội dung trang</h2>
-      <div class="empty-state">
-        <strong>Khu vực này đang chờ TV2 cập nhật.</strong>
-        <p>Chức năng CRUD sản phẩm sẽ hiển thị tại đây.</p>
+      <h2 id="form-title">Thêm sản phẩm mới</h2>
+      <form class="product-form" id="product-form">
+        <input type="hidden" name="id" />
+        <label>
+          Tên sản phẩm *
+          <input type="text" name="name" id="prod-name" maxlength="150"
+                 placeholder="VD: Trà sữa truyền thống" required />
+        </label>
+        <label>
+          Giá bán (VNĐ) *
+          <input type="number" name="price" id="prod-price" min="0" step="any"
+                 placeholder="VD: 35000" required />
+        </label>
+        <label>
+          Số lượng tồn kho *
+          <input type="number" name="stock" id="prod-stock" min="0" step="1"
+                 placeholder="VD: 50" required />
+        </label>
+
+        <label class="col-span-full">
+          Mô tả sản phẩm
+          <textarea name="description" id="prod-description" maxlength="1000"
+                    placeholder="Mô tả ngắn về hương vị, topping hoặc thành phần..."></textarea>
+        </label>
+
+        <div class="image-field-wrap">
+          <div class="image-preview-box" id="image-preview">
+            <span aria-hidden="true">🧋</span>
+          </div>
+          <div class="image-inputs">
+            <label>
+              Tải ảnh từ máy (PNG, JPG, WEBP, GIF)
+              <input type="file" name="image_file" id="prod-image-file"
+                     accept=".png,.jpg,.jpeg,.webp,.gif,image/*" />
+            </label>
+            <label>
+              Hoặc đường dẫn / URL hình ảnh
+              <input type="text" name="image_url" id="prod-image-url"
+                     placeholder="/static/images/products/..." />
+            </label>
+            <div class="image-hint">
+              <span>Hỗ trợ tải tệp tối đa 5 MB hoặc nhập đường dẫn <code>/static/...</code>, <code>https://...</code></span>
+              <button class="btn-link" type="button" id="clear-image-btn" hidden>Xóa ảnh hiện tại</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-approve" type="submit" id="submit-btn">Thêm sản phẩm</button>
+          <button class="btn btn-cancel" type="button" id="cancel-btn" hidden>Hủy sửa</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Bảng danh sách sản phẩm -->
+    <section class="panel panel-gap">
+      <h2>Danh sách sản phẩm</h2>
+      <div class="table-scroll">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>Mã SP</th>
+              <th>Hình ảnh</th>
+              <th>Sản phẩm</th>
+              <th>Giá bán</th>
+              <th>Tồn kho</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="products-body">
+            <tr>
+              <td class="empty-row" colspan="6">Đang tải dữ liệu...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
   </main>
 
   <script>
+    const form = document.getElementById('product-form');
+    const productsBody = document.getElementById('products-body');
+    const searchInput = document.getElementById('search-input');
+    const stockFilter = document.getElementById('stock-filter');
+    const formTitle = document.getElementById('form-title');
+    const submitBtn = document.getElementById('submit-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const statusBanner = document.getElementById('status-banner');
+    const imageFileInput = document.getElementById('prod-image-file');
+    const imageUrlInput = document.getElementById('prod-image-url');
+    const imagePreview = document.getElementById('image-preview');
+    const clearImageBtn = document.getElementById('clear-image-btn');
+
+    let productsCache = [];
+    let clearImageFlag = false;
+    let previewObjectUrl = null;
+
+    const money = (value) =>
+      new Intl.NumberFormat('vi-VN').format(value) + 'Đ';
+
+    const escapeHtml = (value) =>
+      String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[ch]));
+
+    function showStatus(message, isError = false) {
+      statusBanner.textContent = message;
+      statusBanner.className = 'status-banner ' + (isError ? 'is-error' : 'is-ok');
+      statusBanner.hidden = false;
+    }
+
+    function hideStatus() {
+      statusBanner.hidden = true;
+      statusBanner.textContent = '';
+    }
+
     async function api(url, options) {
       const res = await fetch(url, Object.assign(
         { credentials: 'same-origin' }, options || {}
@@ -49,12 +193,249 @@
       } catch (error) { /* redirect handled in api() */ }
     }
 
+    function updatePreview(src) {
+      if (previewObjectUrl && src !== previewObjectUrl) {
+        URL.revokeObjectURL(previewObjectUrl);
+        previewObjectUrl = null;
+      }
+      if (!src) {
+        imagePreview.innerHTML = '<span aria-hidden="true">🧋</span>';
+        clearImageBtn.hidden = true;
+        return;
+      }
+      imagePreview.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = 'Xem trước ảnh sản phẩm';
+      img.onerror = () => {
+        imagePreview.innerHTML = '<span aria-hidden="true">🧋</span>';
+      };
+      imagePreview.appendChild(img);
+      clearImageBtn.hidden = false;
+    }
+
+    const STOCK_BADGES = {
+      out_of_stock: '<span class="badge badge-stock-out">Hết hàng</span>',
+      low_stock: '<span class="badge badge-stock-low">Sắp hết</span>',
+      in_stock: '<span class="badge badge-stock-ok">Còn hàng</span>',
+    };
+
+    function stockBadge(stockStatus) {
+      return STOCK_BADGES[stockStatus] || STOCK_BADGES.in_stock;
+    }
+
+    function thumbHtml(product) {
+      if (!product.image_url) {
+        return '<div class="product-thumb-fallback" aria-hidden="true">🧋</div>';
+      }
+      return `<img class="product-thumb" src="${escapeHtml(product.image_url)}" alt="${escapeHtml(product.name)}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'product-thumb-fallback',textContent:'🧋'}))" />`;
+    }
+
+    function rowHtml(product) {
+      const desc = product.description
+        ? `<p class="product-desc">${escapeHtml(product.description)}</p>`
+        : '<p class="product-desc">Chưa có mô tả</p>';
+
+      return `
+        <tr>
+          <td class="order-id">#${product.id}</td>
+          <td>${thumbHtml(product)}</td>
+          <td class="product-name-cell">
+            <strong>${escapeHtml(product.name)}</strong>
+            ${desc}
+          </td>
+          <td class="money">${money(product.price)}</td>
+          <td>
+            <div class="stock-cell">
+              <span class="stock-qty">${product.stock}</span>
+              ${stockBadge(product.stock_status)}
+            </div>
+          </td>
+          <td>
+            <div class="row-actions">
+              <button class="btn btn-print" type="button" onclick="editProduct(${product.id})">Sửa</button>
+              <button class="btn btn-cancel" type="button" onclick="deleteProduct(${product.id})">Xóa</button>
+            </div>
+          </td>
+        </tr>`;
+    }
+
+    async function loadProducts() {
+      const params = new URLSearchParams();
+      const search = searchInput.value.trim();
+      if (search) params.set('search', search);
+      if (stockFilter.value) params.set('stock', stockFilter.value);
+
+      try {
+        const data = await api('/staff/api/products?' + params.toString());
+        if (!data.ok) throw new Error(data.error || 'Không tải được danh sách sản phẩm');
+
+        if (typeof data.low_stock_threshold === 'number') {
+          document.getElementById('low-stock-option').textContent =
+            `Sắp hết hàng (≤ ${data.low_stock_threshold})`;
+        }
+
+        productsCache = data.products;
+        document.getElementById('kpi-total-products').textContent = data.kpis.total_products;
+        document.getElementById('kpi-total-stock').textContent = data.kpis.total_stock;
+        document.getElementById('kpi-low-stock').textContent = data.kpis.low_stock;
+
+        if (!data.products.length) {
+          productsBody.innerHTML =
+            '<tr><td class="empty-row" colspan="6">Không tìm thấy sản phẩm nào.</td></tr>';
+          return;
+        }
+        productsBody.innerHTML = data.products.map(rowHtml).join('');
+      } catch (error) {
+        if (error.message !== 'unauthorized') {
+          productsBody.innerHTML =
+            `<tr><td class="empty-row" colspan="6">${escapeHtml(error.message)}</td></tr>`;
+        }
+      }
+    }
+
+    function editProduct(id) {
+      const product = productsCache.find((item) => item.id === id);
+      if (!product) return;
+
+      hideStatus();
+      clearImageFlag = false;
+      form.id.value = product.id;
+      form.name.value = product.name;
+      form.price.value = product.price;
+      form.stock.value = product.stock;
+      form.description.value = product.description || '';
+      imageFileInput.value = '';
+      imageUrlInput.value = product.image_url || '';
+      updatePreview(product.image_url || '');
+
+      formTitle.textContent = `Cập nhật sản phẩm #${product.id}`;
+      submitBtn.textContent = 'Cập nhật sản phẩm';
+      cancelBtn.hidden = false;
+      form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function resetForm() {
+      form.reset();
+      form.id.value = '';
+      clearImageFlag = false;
+      imageFileInput.value = '';
+      imageUrlInput.value = '';
+      updatePreview('');
+      formTitle.textContent = 'Thêm sản phẩm mới';
+      submitBtn.textContent = 'Thêm sản phẩm';
+      cancelBtn.hidden = true;
+    }
+
+    async function deleteProduct(id) {
+      const product = productsCache.find((item) => item.id === id);
+      const label = product ? `"${product.name}" (#${id})` : `#${id}`;
+      if (!confirm(`Xóa sản phẩm ${label}?`)) return;
+
+      hideStatus();
+      try {
+        const data = await api('/staff/api/products/' + id, { method: 'DELETE' });
+        if (!data.ok) {
+          showStatus(data.error || 'Xóa sản phẩm thất bại', true);
+          return;
+        }
+        if (String(form.id.value) === String(id)) {
+          resetForm();
+        }
+        showStatus(`Đã xóa sản phẩm ${label}.`);
+        loadProducts();
+      } catch (error) { /* redirect handled in api() */ }
+    }
+
+    imageFileInput.addEventListener('change', () => {
+      const file = imageFileInput.files[0];
+      if (!file) {
+        updatePreview(imageUrlInput.value.trim());
+        return;
+      }
+      clearImageFlag = false;
+      previewObjectUrl = URL.createObjectURL(file);
+      updatePreview(previewObjectUrl);
+    });
+
+    imageUrlInput.addEventListener('input', () => {
+      if (!imageFileInput.files.length) {
+        clearImageFlag = false;
+        updatePreview(imageUrlInput.value.trim());
+      }
+    });
+
+    clearImageBtn.addEventListener('click', () => {
+      imageFileInput.value = '';
+      imageUrlInput.value = '';
+      clearImageFlag = true;
+      updatePreview('');
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      hideStatus();
+
+      const id = form.id.value;
+      const formData = new FormData();
+      formData.append('name', form.name.value);
+      formData.append('price', form.price.value);
+      formData.append('stock', form.stock.value);
+      formData.append('description', form.description.value);
+      formData.append('image_url', imageUrlInput.value.trim());
+      if (clearImageFlag) {
+        formData.append('clear_image', '1');
+      }
+      if (imageFileInput.files.length > 0) {
+        formData.append('image_file', imageFileInput.files[0]);
+      }
+
+      const url = id ? '/staff/api/products/' + id : '/staff/api/products';
+      const method = id ? 'PUT' : 'POST';
+
+      submitBtn.disabled = true;
+      try {
+        const data = await api(url, { method, body: formData });
+        if (!data.ok) {
+          showStatus(data.error || 'Lưu sản phẩm thất bại', true);
+          return;
+        }
+        const savedName = data.product ? data.product.name : form.name.value;
+        resetForm();
+        showStatus(
+          id
+            ? `Đã cập nhật sản phẩm "${savedName}".`
+            : `Đã thêm sản phẩm "${savedName}".`
+        );
+        loadProducts();
+      } catch (error) {
+        if (error.message !== 'unauthorized') {
+          showStatus('Không thể lưu sản phẩm. Vui lòng thử lại.', true);
+        }
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      hideStatus();
+      resetForm();
+    });
+
+    let searchTimer = null;
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(loadProducts, 250);
+    });
+    stockFilter.addEventListener('change', loadProducts);
+
     async function logout() {
       await fetch('/admin/logout', { method: 'POST', credentials: 'same-origin' });
       window.location.href = '/client/login.html';
     }
 
     loadWho();
+    loadProducts();
   </script>
 </body>
 </html>
