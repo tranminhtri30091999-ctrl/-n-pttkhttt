@@ -20,3 +20,7 @@ database.db
 # OS
 .DS_Store
 Thumbs.db
+~$*
+
+# Uploads
+static/images/products/uploads/

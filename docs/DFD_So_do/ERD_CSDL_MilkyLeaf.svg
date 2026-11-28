@@ -1,0 +1,177 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1220" height="720" viewBox="0 0 1220 720">
+  <defs>
+    <style>
+      .title { font: 800 20px "Segoe UI", Arial, sans-serif; fill: #2b1f1a; }
+      .sub { font: 500 13px "Segoe UI", Arial, sans-serif; fill: #6b5a53; }
+      .rel { fill: none; stroke: #7a4b2a; stroke-width: 2.2; }
+      .rel-card { font: 800 12.5px "Segoe UI", Arial, sans-serif; fill: #7a4b2a; }
+      .rel-lbl { font: 600 11.5px "Segoe UI", Arial, sans-serif; fill: #5a4a42; }
+      .leg-txt { font: 600 12px "Segoe UI", Arial, sans-serif; fill: #4a3b34; }
+    </style>
+  </defs>
+  <rect width="1220" height="720" fill="#fffaf5"/>
+  <text x="610" y="36" text-anchor="middle" class="title">LƯỢC ĐỒ QUAN HỆ THỰC THỂ (ERD) — CSDL HỆ THỐNG MILKY LEAF</text>
+  <text x="610" y="58" text-anchor="middle" class="sub">SQLite Relational Schema (database/schema.sql)</text>
+
+  <!-- Relations -->
+  <!-- users (1) -- (N) orders -->
+  <line x1="370" y1="175" x2="455" y2="175" class="rel"/>
+  <text x="382" y="167" class="rel-card">1</text>
+  <text x="441" y="167" class="rel-card">N</text>
+  <text x="412" y="194" text-anchor="middle" class="rel-lbl">đặt</text>
+
+  <!-- orders (1) -- (0..1) invoices -->
+  <line x1="775" y1="175" x2="860" y2="175" class="rel"/>
+  <text x="786" y="167" class="rel-card">1</text>
+  <text x="836" y="167" class="rel-card">0..1</text>
+  <text x="817" y="194" text-anchor="middle" class="rel-lbl">xuất</text>
+
+  <!-- orders (1) -- (N) order_items -->
+  <line x1="615" y1="305" x2="615" y2="435" class="rel"/>
+  <text x="625" y="323" class="rel-card">1</text>
+  <text x="625" y="425" class="rel-card">N</text>
+  <text x="628" y="374.0" class="rel-lbl">bao gồm</text>
+
+  <!-- products (1) -- (N) order_items -->
+  <line x1="370" y1="530" x2="455" y2="530" class="rel"/>
+  <text x="382" y="522" class="rel-card">1</text>
+  <text x="441" y="522" class="rel-card">N</text>
+  <text x="412" y="549" text-anchor="middle" class="rel-lbl">có trong</text>
+
+  <g>
+  <rect x="50" y="95" width="320" height="182" rx="10" fill="#ffffff" stroke="#7a4b2a" stroke-width="2"/>
+  <path d="M50 105 Q50 95 60 95 L360 95 Q370 95 370 105 L370 131 L50 131 Z" fill="#7a4b2a"/>
+  <text x="210.0" y="118" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="800" fill="#ffffff">users (Người dùng)</text>
+  <rect x="60" y="137" width="26" height="16" rx="4" fill="#7a4b2a"/>
+  <text x="73" y="149" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="800" fill="#fff">PK</text>
+  <text x="94" y="150" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">id</text>
+  <text x="360" y="150" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">INTEGER AI</text>
+  <line x1="50" y1="159" x2="370" y2="159" stroke="#eadfd6" stroke-width="1"/>
+  <text x="94" y="178" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">username</text>
+  <text x="360" y="178" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">TEXT UQ, NN</text>
+  <line x1="50" y1="187" x2="370" y2="187" stroke="#eadfd6" stroke-width="1"/>
+  <text x="94" y="206" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">password_hash</text>
+  <text x="360" y="206" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">TEXT NN</text>
+  <line x1="50" y1="215" x2="370" y2="215" stroke="#eadfd6" stroke-width="1"/>
+  <text x="94" y="234" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">role</text>
+  <text x="360" y="234" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">TEXT NN, CHK</text>
+  <line x1="50" y1="243" x2="370" y2="243" stroke="#eadfd6" stroke-width="1"/>
+  <text x="94" y="262" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">created_at</text>
+  <text x="360" y="262" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">TEXT DEF</text>
+</g>
+  <g>
+  <rect x="455" y="95" width="320" height="210" rx="10" fill="#ffffff" stroke="#7a4b2a" stroke-width="2"/>
+  <path d="M455 105 Q455 95 465 95 L765 95 Q775 95 775 105 L775 131 L455 131 Z" fill="#7a4b2a"/>
+  <text x="615.0" y="118" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="800" fill="#ffffff">orders (Đơn hàng)</text>
+  <rect x="465" y="137" width="26" height="16" rx="4" fill="#7a4b2a"/>
+  <text x="478" y="149" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="800" fill="#fff">PK</text>
+  <text x="499" y="150" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">id</text>
+  <text x="765" y="150" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">INTEGER AI</text>
+  <line x1="455" y1="159" x2="775" y2="159" stroke="#eadfd6" stroke-width="1"/>
+  <rect x="465" y="165" width="26" height="16" rx="4" fill="#d98b45"/>
+  <text x="478" y="177" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="800" fill="#fff">FK</text>
+  <text x="499" y="178" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">customer_id</text>
+  <text x="765" y="178" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">INTEGER NN</text>
+  <line x1="455" y1="187" x2="775" y2="187" stroke="#eadfd6" stroke-width="1"/>
+  <text x="499" y="206" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">status</text>
+  <text x="765" y="206" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">TEXT NN, DEF</text>
+  <line x1="455" y1="215" x2="775" y2="215" stroke="#eadfd6" stroke-width="1"/>
+  <text x="499" y="234" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">total</text>
+  <text x="765" y="234" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">REAL NN, DEF</text>
+  <line x1="455" y1="243" x2="775" y2="243" stroke="#eadfd6" stroke-width="1"/>
+  <text x="499" y="262" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">created_at</text>
+  <text x="765" y="262" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">TEXT DEF</text>
+  <line x1="455" y1="271" x2="775" y2="271" stroke="#eadfd6" stroke-width="1"/>
+  <text x="499" y="290" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">approved_at</text>
+  <text x="765" y="290" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">TEXT NULL</text>
+</g>
+  <g>
+  <rect x="860" y="95" width="310" height="126" rx="10" fill="#ffffff" stroke="#7a4b2a" stroke-width="2"/>
+  <path d="M860 105 Q860 95 870 95 L1160 95 Q1170 95 1170 105 L1170 131 L860 131 Z" fill="#7a4b2a"/>
+  <text x="1015.0" y="118" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="800" fill="#ffffff">invoices (Hóa đơn)</text>
+  <rect x="870" y="137" width="26" height="16" rx="4" fill="#7a4b2a"/>
+  <text x="883" y="149" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="800" fill="#fff">PK</text>
+  <text x="904" y="150" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">id</text>
+  <text x="1160" y="150" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">INTEGER AI</text>
+  <line x1="860" y1="159" x2="1170" y2="159" stroke="#eadfd6" stroke-width="1"/>
+  <rect x="868" y="165" width="38" height="16" rx="4" fill="#b96a12"/>
+  <text x="887" y="177" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-weight="800" fill="#fff">FK/UQ</text>
+  <text x="912" y="178" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">order_id</text>
+  <text x="1160" y="178" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">INTEGER NN</text>
+  <line x1="860" y1="187" x2="1170" y2="187" stroke="#eadfd6" stroke-width="1"/>
+  <text x="904" y="206" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">issued_at</text>
+  <text x="1160" y="206" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">TEXT DEF</text>
+</g>
+  <g>
+  <rect x="50" y="415" width="320" height="238" rx="10" fill="#fff9f2" stroke="#d98b45" stroke-width="2.8"/>
+  <path d="M50 425 Q50 415 60 415 L360 415 Q370 415 370 425 L370 451 L50 451 Z" fill="#d98b45"/>
+  <text x="210.0" y="438" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="800" fill="#ffffff">products (Sản phẩm)</text>
+  <rect x="60" y="457" width="26" height="16" rx="4" fill="#7a4b2a"/>
+  <text x="73" y="469" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="800" fill="#fff">PK</text>
+  <text x="94" y="470" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">id</text>
+  <text x="360" y="470" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">INTEGER AI</text>
+  <line x1="50" y1="479" x2="370" y2="479" stroke="#eadfd6" stroke-width="1"/>
+  <text x="94" y="498" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">name</text>
+  <text x="360" y="498" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">TEXT NN</text>
+  <line x1="50" y1="507" x2="370" y2="507" stroke="#eadfd6" stroke-width="1"/>
+  <text x="94" y="526" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">price</text>
+  <text x="360" y="526" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">REAL NN</text>
+  <line x1="50" y1="535" x2="370" y2="535" stroke="#eadfd6" stroke-width="1"/>
+  <text x="94" y="554" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">stock</text>
+  <text x="360" y="554" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">INTEGER NN, DEF</text>
+  <line x1="50" y1="563" x2="370" y2="563" stroke="#eadfd6" stroke-width="1"/>
+  <text x="94" y="582" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">description</text>
+  <text x="360" y="582" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">TEXT NULL</text>
+  <line x1="50" y1="591" x2="370" y2="591" stroke="#eadfd6" stroke-width="1"/>
+  <text x="94" y="610" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">image_url</text>
+  <text x="360" y="610" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">TEXT DEF</text>
+  <line x1="50" y1="619" x2="370" y2="619" stroke="#eadfd6" stroke-width="1"/>
+  <text x="94" y="638" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">created_at</text>
+  <text x="360" y="638" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">TEXT DEF</text>
+</g>
+  <g>
+  <rect x="455" y="435" width="320" height="182" rx="10" fill="#ffffff" stroke="#7a4b2a" stroke-width="2"/>
+  <path d="M455 445 Q455 435 465 435 L765 435 Q775 435 775 445 L775 471 L455 471 Z" fill="#7a4b2a"/>
+  <text x="615.0" y="458" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="800" fill="#ffffff">order_items (Chi tiết đơn)</text>
+  <rect x="465" y="477" width="26" height="16" rx="4" fill="#7a4b2a"/>
+  <text x="478" y="489" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="800" fill="#fff">PK</text>
+  <text x="499" y="490" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">id</text>
+  <text x="765" y="490" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">INTEGER AI</text>
+  <line x1="455" y1="499" x2="775" y2="499" stroke="#eadfd6" stroke-width="1"/>
+  <rect x="465" y="505" width="26" height="16" rx="4" fill="#d98b45"/>
+  <text x="478" y="517" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="800" fill="#fff">FK</text>
+  <text x="499" y="518" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">order_id</text>
+  <text x="765" y="518" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">INTEGER NN</text>
+  <line x1="455" y1="527" x2="775" y2="527" stroke="#eadfd6" stroke-width="1"/>
+  <rect x="465" y="533" width="26" height="16" rx="4" fill="#d98b45"/>
+  <text x="478" y="545" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="800" fill="#fff">FK</text>
+  <text x="499" y="546" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">product_id</text>
+  <text x="765" y="546" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">INTEGER NN</text>
+  <line x1="455" y1="555" x2="775" y2="555" stroke="#eadfd6" stroke-width="1"/>
+  <text x="499" y="574" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">quantity</text>
+  <text x="765" y="574" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">INTEGER NN</text>
+  <line x1="455" y1="583" x2="775" y2="583" stroke="#eadfd6" stroke-width="1"/>
+  <text x="499" y="602" font-family="Consolas, Segoe UI, monospace" font-size="12.5" font-weight="700" fill="#2b1f1a">price</text>
+  <text x="765" y="602" text-anchor="end" font-family="Segoe UI, Arial, sans-serif" font-size="11" font-weight="600" fill="#6b5a53">REAL NN</text>
+</g>
+
+  <!-- Legend / Notes -->
+  <g transform="translate(860, 415)">
+    <rect x="0" y="0" width="310" height="232" rx="10" fill="#ffffff" stroke="#eadfd6" stroke-width="1.8"/>
+    <text x="18" y="28" font-family="Segoe UI, Arial, sans-serif" font-size="13.5" font-weight="800" fill="#7a4b2a">CHÚ THÍCH KÝ HIỆU</text>
+    <line x1="18" y1="38" x2="292" y2="38" stroke="#eadfd6" stroke-width="1"/>
+    <rect x="18" y="52" width="28" height="16" rx="4" fill="#7a4b2a"/>
+    <text x="32" y="64" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="800" fill="#fff">PK</text>
+    <text x="56" y="64" class="leg-txt">Khóa chính (Primary Key)</text>
+
+    <rect x="18" y="80" width="28" height="16" rx="4" fill="#d98b45"/>
+    <text x="32" y="92" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="800" fill="#fff">FK</text>
+    <text x="56" y="92" class="leg-txt">Khóa ngoại (Foreign Key)</text>
+
+    <text x="18" y="122" class="leg-txt"><tspan font-weight="800">AI</tspan>: AUTOINCREMENT &nbsp;|&nbsp; <tspan font-weight="800">NN</tspan>: NOT NULL</text>
+    <text x="18" y="146" class="leg-txt"><tspan font-weight="800">UQ</tspan>: UNIQUE &nbsp;|&nbsp; <tspan font-weight="800">DEF</tspan>: DEFAULT</text>
+    <text x="18" y="170" class="leg-txt"><tspan font-weight="800">CHK</tspan>: CHECK (admin, staff, customer)</text>
+    <text x="18" y="196" class="leg-txt"><tspan font-weight="800">1 — N</tspan>: Quan hệ Một - Nhiều</text>
+    <text x="18" y="218" class="leg-txt"><tspan font-weight="800">1 — 0..1</tspan>: Một đơn tối đa 1 hóa đơn</text>
+  </g>
+</svg>

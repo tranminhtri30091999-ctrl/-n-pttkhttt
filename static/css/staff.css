@@ -1,0 +1,234 @@
+/* Style riêng cho trang Quản lý sản phẩm (kết hợp cùng admin.css). */
+
+.filter-select {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 0.9rem;
+  padding: 0.65rem 0.9rem;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--text);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+
+.filter-select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.status-banner {
+  margin-bottom: 1rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: 0.85rem;
+  font-weight: 600;
+  font-size: 0.92rem;
+  border: 1px solid transparent;
+}
+
+.status-banner[hidden] {
+  display: none;
+}
+
+.status-banner.is-ok {
+  background: #e3f4e8;
+  color: var(--ok);
+  border-color: #b7dfc4;
+}
+
+.status-banner.is-error {
+  background: #fbe4e2;
+  color: var(--danger);
+  border-color: #eab9b5;
+}
+
+.product-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  padding: 1.25rem;
+  align-items: start;
+}
+
+.product-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.product-form input,
+.product-form textarea {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 0.7rem;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  font-size: 0.94rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.product-form textarea {
+  resize: vertical;
+  min-height: 76px;
+}
+
+.product-form input:focus,
+.product-form textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.product-form .col-span-full {
+  grid-column: 1 / -1;
+}
+
+.image-field-wrap {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.9rem;
+  border: 1px dashed var(--border);
+  border-radius: 0.9rem;
+  background: #fdf9f5;
+}
+
+.image-preview-box {
+  width: 96px;
+  height: 96px;
+  border-radius: 0.85rem;
+  border: 1px solid var(--border);
+  background: #f6ece4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 2rem;
+}
+
+.image-preview-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.image-inputs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.image-hint {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.btn-link {
+  border: 0;
+  background: transparent;
+  color: var(--danger);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
+}
+
+.product-form .form-actions {
+  display: flex;
+  gap: 0.6rem;
+  grid-column: 1 / -1;
+  padding-top: 0.25rem;
+}
+
+.product-thumb {
+  width: 54px;
+  height: 54px;
+  border-radius: 0.7rem;
+  border: 1px solid var(--border);
+  background: #f6ece4;
+  object-fit: cover;
+  display: block;
+}
+
+.product-thumb-fallback {
+  width: 54px;
+  height: 54px;
+  border-radius: 0.7rem;
+  border: 1px solid var(--border);
+  background: #f6ece4;
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+}
+
+.product-name-cell strong {
+  display: block;
+  color: var(--text);
+  margin-bottom: 0.2rem;
+}
+
+.product-desc {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+.stock-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.stock-qty {
+  font-weight: 700;
+  min-width: 2.2rem;
+}
+
+.badge-stock-ok {
+  background: #e3f4e8;
+  color: var(--ok);
+}
+
+.badge-stock-low {
+  background: #fdf0d9;
+  color: var(--warn);
+}
+
+.badge-stock-out {
+  background: #fbe4e2;
+  color: var(--danger);
+}
+
+@media (max-width: 860px) {
+  .product-form {
+    grid-template-columns: 1fr;
+  }
+
+  .image-field-wrap {
+    grid-template-columns: 1fr;
+  }
+
+  .image-inputs {
+    grid-template-columns: 1fr;
+  }
+}
