@@ -1,0 +1,27 @@
+{# Cột điều hướng dùng chung cho trang quản trị / nhân viên (sidebar luôn hiển thị). #}
+{# Trang gọi include truyền vào biến active_nav (vd: 'users', 'orders').            #}
+{# Mục "Quản lý tài khoản" chỉ hiển thị cho vai trò admin.                         #}
+<aside class="admin-sidebar">
+  <div class="sidebar-title">MILKY LEAF ADMIN</div>
+  <nav class="sidebar-nav">
+    <a href="/staff/orders.html"
+       {% if active_nav | default('') == 'orders' %}class="active"{% endif %}>Quản lý đơn hàng</a>
+    <a href="/staff/products.html"
+       {% if active_nav | default('') == 'products' %}class="active"{% endif %}>Quản lý sản phẩm</a>
+    <a href="/staff/bills.html"
+       {% if active_nav | default('') == 'bills' %}class="active"{% endif %}>Hoá đơn &amp; Lưu trữ</a>
+    <a href="/staff/dashboard.html"
+       {% if active_nav | default('') == 'dashboard' %}class="active"{% endif %}>Thống kê &amp; Báo cáo</a>
+    {% if session.get('role') == 'admin' %}
+    <a href="/admin/users.html"
+       {% if active_nav | default('') == 'users' %}class="active"{% endif %}>Quản lý tài khoản</a>
+    {% endif %}
+  </nav>
+  <div class="sidebar-footer">
+    <div class="who">
+      <span class="role-chip">{{ (session.get('role') or '') | upper }}</span>
+      <span id="who-name">...</span>
+    </div>
+    <button class="btn-logout" type="button" onclick="logout()">Đăng xuất</button>
+  </div>
+</aside>

@@ -4,6 +4,7 @@ import sqlite3
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
 SCHEMA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "schema.sql")
+SEED_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "seed_data.sql")
 
 DEMO_PRODUCTS = [
     ("Trà sữa trân châu", 45000, 24, "Trà sữa thơm béo kết hợp trân châu dai giòn.", "Trà sữa"),
@@ -39,38 +40,37 @@ def get_db():
     return conn
 
 
+def _migrate(conn):
+    """Áp dụng thay đổi schema cho database đã tồn tại (idempotent)."""
+    order_cols = {row[1] for row in conn.execute("PRAGMA table_info(orders)")}
+    if "approved_at" not in order_cols:
+        conn.execute("ALTER TABLE orders ADD COLUMN approved_at TEXT")
+
+
 def init_db():
     conn = get_db()
-    try:
-        with open(SCHEMA_PATH, "r", encoding="utf-8") as schema_file:
-            conn.executescript(schema_file.read())
+    with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
+        conn.executescript(f.read())
+    _migrate(conn)
 
-        existing_columns = {row["name"] for row in conn.execute("PRAGMA table_info(orders)")}
-        for column, definition in (
-            ("customer_name", "TEXT NOT NULL DEFAULT ''"),
-            ("phone", "TEXT NOT NULL DEFAULT ''"),
-            ("delivery_address", "TEXT NOT NULL DEFAULT ''"),
-        ):
-            if column not in existing_columns:
-                conn.execute(f"ALTER TABLE orders ADD COLUMN {column} {definition}")
+    user_count = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    if user_count == 0:
+        from werkzeug.security import generate_password_hash
 
-        product_columns = {row["name"] for row in conn.execute("PRAGMA table_info(products)")}
-        if "category" not in product_columns:
-            conn.execute("ALTER TABLE products ADD COLUMN category TEXT NOT NULL DEFAULT 'Khác'")
+        seed_users = [
+            ("admin", "admin123", "admin"),
+            ("staff", "staff123", "staff"),
+            ("customer", "customer123", "customer"),
+        ]
+        conn.executemany(
+            "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
+            [(u, generate_password_hash(p), r) for u, p, r in seed_users],
+        )
 
-        if conn.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0:
-            from werkzeug.security import generate_password_hash
-            seed_users = [("admin", "admin123", "admin"), ("staff", "staff123", "staff"), ("customer", "customer123", "customer")]
-            conn.executemany(
-                "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
-                [(u, generate_password_hash(p), r) for u, p, r in seed_users],
-            )
+    product_count = conn.execute("SELECT COUNT(*) FROM products").fetchone()[0]
+    if product_count == 0 and os.path.exists(SEED_PATH):
+        with open(SEED_PATH, "r", encoding="utf-8") as f:
+            conn.executescript(f.read())
 
-        for name, price, stock, description, category in DEMO_PRODUCTS:
-            conn.execute(
-                "INSERT INTO products (name, price, stock, description, category) SELECT ?, ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = ?)",
-                (name, price, stock, description, category, name),
-            )
-        conn.commit()
-    finally:
-        conn.close()
+    conn.commit()
+    conn.close()

@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS orders (
     phone TEXT NOT NULL DEFAULT '',
     delivery_address TEXT NOT NULL DEFAULT '',
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    approved_at TEXT,
     FOREIGN KEY (customer_id) REFERENCES users (id)
 );
 

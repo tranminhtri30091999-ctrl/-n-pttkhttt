@@ -1,9 +1,274 @@
 <!DOCTYPE html>
-<html lang="vi"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Milky Leaf - Quản lý đơn hàng</title><link rel="stylesheet" href="/static/css/client.css"/></head><body>
-<header class="site-header"><a class="brand" href="/client/index.html">🧋 Milky Leaf</a><nav class="site-nav"><a href="/client/index.html">Trang chủ</a><a href="/staff/products.html">Sản phẩm</a><a href="/staff/orders.html">Đơn hàng</a><a href="/staff/dashboard.html">Báo cáo</a></nav><div class="auth-actions"><span class="role-badge">Staff</span><button class="btn btn-secondary" id="logout" type="button">Đăng xuất</button></div></header>
-<main><section class="section"><h1>Duyệt / hủy đơn hàng</h1><p class="muted">Tồn kho được trừ khi đặt hàng. Duyệt không trừ thêm; hủy đơn đang chờ sẽ hoàn kho.</p><p class="status-message" data-message role="status">Đang tải…</p><div class="table-wrap"><table class="admin-table"><thead><tr><th>Mã</th><th>Khách hàng</th><th>Sản phẩm</th><th>Tổng</th><th>Trạng thái</th><th>Ngày tạo</th><th>Thao tác</th></tr></thead><tbody data-orders></tbody></table></div></section></main>
-<script>
-const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const money=n=>new Intl.NumberFormat('vi-VN').format(Number(n)||0)+'đ';
-async function load(){const body=document.querySelector('[data-orders]'),msg=document.querySelector('[data-message]');try{const r=await fetch('/staff/api/orders',{credentials:'same-origin'}),d=await r.json();if(r.status===401||r.status===403){msg.innerHTML='Cần đăng nhập với tài khoản nhân viên/admin. <a href="/client/login.html">Đăng nhập</a>';body.replaceChildren();return}if(!r.ok||!d.ok)throw Error(d.error||'Không tải được đơn hàng');msg.textContent=d.orders.length?'':'Chưa có đơn hàng.';body.innerHTML=d.orders.map(o=>{const items=o.items.map(i=>`${escapeHtml(i.name||'Sản phẩm')} × ${Number(i.quantity)}`).join('<br>');const actions=o.status==='pending'?`<button class="btn btn-primary" data-action="approve" data-id="${Number(o.id)}">Duyệt</button> <button class="btn btn-secondary" data-action="cancel" data-id="${Number(o.id)}">Hủy / hoàn kho</button>`:'—';return `<tr><td>#${Number(o.id)}</td><td>${escapeHtml(o.customer_name)}<br>${escapeHtml(o.phone)} · ${escapeHtml(o.username)}<br>${escapeHtml(o.delivery_address)}</td><td>${items}</td><td>${money(o.total)}</td><td>${escapeHtml(o.status)}</td><td>${escapeHtml(o.created_at)}</td><td>${actions}</td></tr>`}).join('')}catch(e){msg.className='status-message error-message';msg.textContent=e.message}}
-document.querySelector('[data-orders]').addEventListener('click',async e=>{const b=e.target.closest('[data-action]');if(!b)return;const id=Number(b.dataset.id),action=b.dataset.action;if(action==='cancel'&&!confirm(`Hủy đơn #${id} và hoàn lại kho?`))return;b.disabled=true;try{const r=await fetch(`/staff/api/orders/${id}/${action}`,{method:'POST',credentials:'same-origin'}),d=await r.json();if(!r.ok||!d.ok)throw Error(d.error||'Không cập nhật được đơn');await load()}catch(e){alert(e.message);b.disabled=false}});document.getElementById('logout').addEventListener('click',async()=>{await fetch('/admin/logout',{method:'POST'});location.href='/client/login.html'});load();
-</script></body></html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Milky Leaf - Quản trị bán hàng</title>
+  <link rel="stylesheet" href="../../static/css/admin.css" />
+</head>
+<body class="admin">
+
+  <!-- Sidebar: cột điều hướng dùng chung của trang quản trị -->
+  {% include 'staff/_sidebar.html' %}
+
+  <!-- Main content -->
+  <main class="admin-main">
+    <!-- Header &amp; công cụ -->
+    <header class="page-head">
+      <h1>Quản lý đơn hàng</h1>
+      <div class="toolbar">
+        <div class="date-range">
+          <svg class="icon-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <span class="dr-label">Từ ngày</span>
+          <input type="date" id="date-from" aria-label="Từ ngày" />
+          <span class="dr-arrow">&rarr;</span>
+          <span class="dr-label">Đến ngày</span>
+          <input type="date" id="date-to" aria-label="Đến ngày" />
+        </div>
+        <div class="search-box">
+          <svg class="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="search" id="search-input" placeholder="Search"
+                 aria-label="Tìm kiếm đơn hàng" />
+        </div>
+      </div>
+    </header>
+
+    <!-- Khối chỉ số tổng quan -->
+    <section class="kpi-grid" aria-label="Chỉ số tổng quan">
+      <div class="kpi-card">
+        <span class="kpi-label">Đơn chờ duyệt</span>
+        <strong class="kpi-value" id="kpi-pending">0</strong>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Đã duyệt hôm nay</span>
+        <strong class="kpi-value" id="kpi-approved-today">0</strong>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Tồn kho sản phẩm</span>
+        <strong class="kpi-value" id="kpi-stock">0</strong>
+      </div>
+    </section>
+
+    <!-- Bảng dữ liệu chính -->
+    <section class="panel">
+      <h2>Danh sách đơn hàng</h2>
+      <div class="table-scroll">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>Mã đơn</th>
+              <th>Khách hàng</th>
+              <th>Sản phẩm &amp; Số lượng</th>
+              <th>Tổng tiền</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="orders-body">
+            <tr>
+              <td class="empty-row" colspan="6">Đang tải dữ liệu...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal xem trước / in chứng từ phiếu thanh toán -->
+  <div class="modal-overlay" id="invoice-modal" hidden>
+    <div class="invoice-sheet" id="invoice-sheet" role="dialog"
+         aria-modal="true" aria-label="Xem trước hóa đơn"></div>
+  </div>
+
+  <script>
+    const ordersBody = document.getElementById('orders-body');
+    const searchInput = document.getElementById('search-input');
+    const dateFrom = document.getElementById('date-from');
+    const dateTo = document.getElementById('date-to');
+    const invoiceModal = document.getElementById('invoice-modal');
+    const invoiceSheet = document.getElementById('invoice-sheet');
+
+    const money = (value) =>
+      new Intl.NumberFormat('vi-VN').format(value) + 'Đ';
+
+    const escapeHtml = (value) =>
+      String(value).replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[ch]));
+
+    async function api(url, options) {
+      const res = await fetch(url, Object.assign(
+        { credentials: 'same-origin' }, options || {}
+      ));
+      if (res.status === 401 || res.status === 403) {
+        window.location.href = '/client/login.html';
+        throw new Error('unauthorized');
+      }
+      return res.json();
+    }
+
+    async function loadWho() {
+      try {
+        const data = await api('/admin/me');
+        if (data.ok) {
+          document.getElementById('who-name').textContent = data.user.username;
+        }
+      } catch (error) { /* redirect handled in api() */ }
+    }
+
+    function rowHtml(order) {
+      const items = order.items.map((item) =>
+        `<span><b>${escapeHtml(item.name)}</b> x${item.quantity}</span>`
+      ).join('');
+
+      const canApprove = order.status === 'pending';
+      const canCancel = order.status !== 'cancelled';
+
+      return `
+        <tr>
+          <td class="order-id">${order.id}</td>
+          <td class="customer-cell">${escapeHtml(order.customer)}</td>
+          <td><div class="items-list">${items}</div></td>
+          <td class="money">${money(order.total)}</td>
+          <td><span class="badge badge-${order.status}">${escapeHtml(order.status_label)}</span></td>
+          <td>
+            <div class="row-actions">
+              <button class="btn btn-approve" ${canApprove ? '' : 'disabled'}
+                      onclick="approveOrder(${order.id})">Duyệt</button>
+              <button class="btn btn-cancel" ${canCancel ? '' : 'disabled'}
+                      onclick="cancelOrder(${order.id})">Huỷ</button>
+              <button class="btn btn-print"
+                      onclick="printInvoice(${order.id})">In hoá đơn</button>
+            </div>
+          </td>
+        </tr>`;
+    }
+
+    async function loadOrders() {
+      const params = new URLSearchParams();
+      const search = searchInput.value.trim();
+      if (search) params.set('search', search);
+      if (dateFrom.value) params.set('from', dateFrom.value);
+      if (dateTo.value) params.set('to', dateTo.value);
+
+      try {
+        const data = await api('/staff/api/orders?' + params.toString());
+        if (!data.ok) throw new Error(data.error || 'Không tải được đơn hàng');
+
+        document.getElementById('kpi-pending').textContent = data.kpis.pending;
+        document.getElementById('kpi-approved-today').textContent =
+          data.kpis.approved_today;
+        document.getElementById('kpi-stock').textContent = data.kpis.stock;
+
+        if (!data.orders.length) {
+          ordersBody.innerHTML =
+            '<tr><td class="empty-row" colspan="6">Không tìm thấy đơn hàng nào.</td></tr>';
+          return;
+        }
+        ordersBody.innerHTML = data.orders.map(rowHtml).join('');
+      } catch (error) {
+        if (error.message !== 'unauthorized') {
+          ordersBody.innerHTML =
+            `<tr><td class="empty-row" colspan="6">${escapeHtml(error.message)}</td></tr>`;
+        }
+      }
+    }
+
+    async function approveOrder(id) {
+      const data = await api(`/staff/api/orders/${id}/approve`, { method: 'POST' });
+      if (!data.ok) { alert(data.error || 'Duyệt đơn thất bại'); return; }
+      loadOrders();
+    }
+
+    async function cancelOrder(id) {
+      if (!confirm(`Huỷ đơn #${id}? Đơn đã duyệt sẽ được hoàn trả tồn kho.`)) return;
+      const data = await api(`/staff/api/orders/${id}/cancel`, { method: 'POST' });
+      if (!data.ok) { alert(data.error || 'Huỷ đơn thất bại'); return; }
+      loadOrders();
+    }
+
+    function renderInvoice(inv) {
+      const rows = inv.items.map((item) => `
+        <tr>
+          <td>${escapeHtml(item.name)}</td>
+          <td>x${item.quantity}</td>
+          <td>${money(item.price * item.quantity)}</td>
+        </tr>`).join('');
+
+      invoiceSheet.innerHTML = `
+        <div class="inv-head">
+          <h3>MILKY LEAF</h3>
+          <p>Phiếu thanh toán</p>
+        </div>
+        <div class="inv-meta">
+          <div><span>Mã hóa đơn</span><b>HD${inv.id}</b></div>
+          <div><span>Mã đơn</span><b>#${inv.order_id}</b></div>
+          <div><span>Khách hàng</span><b>${escapeHtml(inv.customer)}</b></div>
+          <div><span>Thời gian</span><b>${escapeHtml(inv.issued_at)}</b></div>
+        </div>
+        <table class="inv-table">
+          <thead>
+            <tr><th>Sản phẩm</th><th>SL</th><th>Thành tiền</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div class="inv-total">
+          <span>Tổng cộng</span><span>${money(inv.total)}</span>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-print" type="button"
+                  onclick="window.print()">In phiếu</button>
+          <button class="btn btn-cancel" type="button"
+                  onclick="closeInvoice()">Đóng</button>
+        </div>`;
+      invoiceModal.hidden = false;
+    }
+
+    async function printInvoice(id) {
+      // Tạo (hoặc lấy lại) bản ghi hóa đơn rồi xem trước trước khi in.
+      const data = await api(`/staff/api/orders/${id}/invoice`, { method: 'POST' });
+      if (!data.ok) { alert(data.error || 'Tạo hóa đơn thất bại'); return; }
+      renderInvoice(data.invoice);
+    }
+
+    function closeInvoice() {
+      invoiceModal.hidden = true;
+      invoiceSheet.innerHTML = '';
+    }
+
+    invoiceModal.addEventListener('click', (event) => {
+      if (event.target === invoiceModal) closeInvoice();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !invoiceModal.hidden) closeInvoice();
+    });
+
+    let searchTimer = null;
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(loadOrders, 300);
+    });
+    dateFrom.addEventListener('change', loadOrders);
+    dateTo.addEventListener('change', loadOrders);
+
+    async function logout() {
+      await fetch('/admin/logout', { method: 'POST', credentials: 'same-origin' });
+      window.location.href = '/client/login.html';
+    }
+
+    loadWho();
+    loadOrders();
+  </script>
+</body>
+</html>
