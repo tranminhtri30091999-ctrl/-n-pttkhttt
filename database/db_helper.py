@@ -6,10 +6,37 @@ DB_PATH = os.path.join(BASE_DIR, "database.db")
 SCHEMA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "schema.sql")
 SEED_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "seed_data.sql")
 
+DEMO_PRODUCTS = [
+    ("Trà sữa trân châu", 45000, 24, "Trà sữa thơm béo kết hợp trân châu dai giòn.", "Trà sữa"),
+    ("Trà sữa matcha", 50000, 18, "Matcha thơm dịu, vị trà xanh cân bằng cùng sữa tươi.", "Trà sữa"),
+    ("Trà sữa khoai môn", 48000, 12, "Khoai môn bùi mịn, thơm ngon và dễ uống.", "Trà sữa"),
+    ("Trà sữa chocolate", 52000, 9, "Chocolate đậm vị dành cho tín đồ cacao.", "Trà sữa"),
+    ("Trà sữa ô long", 49000, 16, "Trà ô long thơm nhẹ, hậu vị thanh.", "Trà sữa"),
+    ("Trà sữa lài", 42000, 20, "Hương hoa lài dịu nhẹ kết hợp sữa tươi.", "Trà sữa"),
+    ("Trà sữa caramel", 53000, 14, "Vị caramel ngọt thơm, béo vừa phải.", "Trà sữa"),
+    ("Trà sữa dâu", 50000, 15, "Dâu tươi chua ngọt kết hợp trà sữa.", "Trà sữa"),
+    ("Trà đào cam sả", 45000, 22, "Trà đào thơm mát cùng cam và sả.", "Trà trái cây"),
+    ("Trà vải", 43000, 19, "Trà thanh mát với vải ngọt dịu.", "Trà trái cây"),
+    ("Trà chanh mật ong", 35000, 25, "Trà chanh tươi và mật ong dịu ngọt.", "Trà trái cây"),
+    ("Trà dâu tằm", 42000, 17, "Dâu tằm chua ngọt pha cùng trà lài.", "Trà trái cây"),
+    ("Trà xoài nhiệt đới", 47000, 13, "Xoài chín thơm cùng trà trái cây.", "Trà trái cây"),
+    ("Cà phê sữa đá", 35000, 20, "Cà phê rang xay pha cùng sữa đặc.", "Cà phê"),
+    ("Bạc xỉu", 38000, 18, "Cà phê sữa nhiều sữa, vị nhẹ nhàng.", "Cà phê"),
+    ("Cà phê đen đá", 30000, 21, "Cà phê đậm vị, dùng cùng đá.", "Cà phê"),
+    ("Cacao sữa nóng", 40000, 12, "Cacao thơm béo, phục vụ nóng.", "Đồ uống khác"),
+    ("Sữa tươi trân châu đường đen", 52000, 16, "Sữa tươi và trân châu đường đen.", "Đồ uống khác"),
+    ("Trân châu đen", 10000, 40, "Topping trân châu đen dai ngon.", "Topping"),
+    ("Thạch trái cây", 12000, 30, "Topping thạch trái cây nhiều màu.", "Topping"),
+    ("Pudding trứng", 15000, 24, "Pudding trứng mềm mịn.", "Topping"),
+    ("Thạch phô mai", 18000, 20, "Thạch phô mai béo nhẹ.", "Topping"),
+]
+
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=10)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA busy_timeout = 10000")
     return conn
 
 

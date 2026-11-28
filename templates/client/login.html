@@ -1,66 +1,16 @@
 <!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Milky Leaf - Đăng nhập</title>
-  <link rel="stylesheet" href="../../static/css/client.css" />
-</head>
-<body>
-  <header class="site-header">
-    <a class="brand" href="index.html">🧋 Milky Leaf</a>
-    <nav class="site-nav">
-      <a href="index.html">Trang chủ</a>
-      <a href="storeproduct.html">Sản phẩm</a>
-      <a href="checkout.html">Giỏ hàng</a>
-    </nav>
-    <div class="auth-actions">
-      <a class="btn btn-secondary" href="login.html">Đăng nhập</a>
-    </div>
-  </header>
-
-  <main>
-    <section class="section checkout">
-      <h1>Đăng nhập</h1>
-      <p>Chọn vai trò để vào đúng khu vực phân quyền.</p>
-      <form class="checkout-form" id="login-form">
-        <label>
-          Tên đăng nhập
-          <input type="text" name="username" required />
-        </label>
-        <label>
-          Mật khẩu
-          <input type="password" name="password" required />
-        </label>
-        <p class="login-note">Vai trò được xác định bởi tài khoản backend.</p>
-        <button class="btn btn-primary" type="submit">Đăng nhập</button>
-      </form>
-    </section>
-  </main>
-
-  <script>
-    document.getElementById('login-form').addEventListener('submit', async function (event) {
-      event.preventDefault();
-      const username = this.username.value;
-      const password = this.password.value;
-      try {
-        const response = await fetch('/admin/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'same-origin',
-          body: JSON.stringify({ username, password })
-        });
-        const data = await response.json();
-        if (!response.ok || !data.ok) {
-          alert(data.error || 'Đăng nhập thất bại');
-          return;
-        }
-        localStorage.setItem('milkyLeafRole', data.user.role);
-        window.location.href = 'index.html';
-      } catch (error) {
-        alert('Không kết nối được backend. Hãy chạy python app.py và mở http://127.0.0.1:5000/client/login.html');
-      }
-    });
-  </script>
-</body>
-</html>
+<html lang="vi"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Milky Leaf - Đăng nhập / đăng ký</title><link rel="stylesheet" href="/static/css/client.css"/><link rel="stylesheet" href="/static/css/shop-enhancements.css"/></head>
+<body><header class="site-header"><a class="brand" href="/client/index.html">🧋 Milky Leaf</a><nav class="site-nav"><a href="/client/index.html">Trang chủ</a><a href="/client/storeproduct.html">Sản phẩm</a><a href="/client/checkout.html">Giỏ hàng</a></nav></header>
+<main><section class="section checkout"><h1>Tài khoản khách hàng</h1><p class="muted">Đăng nhập để đặt hàng hoặc tạo tài khoản mới miễn phí.</p>
+<div class="auth-tabs"><button class="btn btn-primary" type="button" data-auth-tab="login">Đăng nhập</button><button class="btn btn-secondary" type="button" data-auth-tab="register">Đăng ký</button></div>
+<form class="checkout-form" data-auth-form="login"><label>Tên đăng nhập<input name="username" autocomplete="username" required maxlength="30"/></label><label>Mật khẩu<input type="password" name="password" autocomplete="current-password" required/></label><p class="status-message" data-auth-message role="status"></p><button class="btn btn-primary" type="submit">Đăng nhập</button></form>
+<form class="checkout-form" data-auth-form="register" hidden><label>Tên đăng nhập<input name="username" autocomplete="username" required minlength="3" maxlength="30" pattern="[A-Za-z0-9_.-]+"/></label><label>Mật khẩu (ít nhất 8 ký tự)<input type="password" name="password" autocomplete="new-password" required minlength="8" maxlength="128"/></label><p class="status-message" data-register-message role="status"></p><button class="btn btn-primary" type="submit">Tạo tài khoản khách hàng</button></form>
+</section></main><div class="toast-region" aria-live="polite"></div>
+<script>
+const forms={login:document.querySelector('[data-auth-form="login"]'),register:document.querySelector('[data-auth-form="register"]')};
+document.querySelectorAll('[data-auth-tab]').forEach(button=>button.addEventListener('click',()=>{Object.entries(forms).forEach(([key,form])=>form.hidden=key!==button.dataset.authTab);document.querySelectorAll('[data-auth-tab]').forEach(tab=>tab.className=tab===button?'btn btn-primary':'btn btn-secondary')}));
+function toast(message,type='success'){const node=document.createElement('div');node.className=`toast toast-${type}`;node.textContent=message;const region=document.querySelector('.toast-region');region.append(node);requestAnimationFrame(()=>node.classList.add('toast-visible'));setTimeout(()=>node.remove(),3200)}
+async function submitAuth(form,url,message){const button=form.querySelector('button[type="submit"]');button.disabled=true;message.textContent='Đang xử lý…';try{const response=await fetch(url,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(new FormData(form)))});const data=await response.json();if(!response.ok||!data.ok)throw new Error(data.error||'Không thể xác thực tài khoản.');toast(url.includes('register')?'Đăng ký thành công!':'Đăng nhập thành công!');setTimeout(()=>location.href='/client/index.html',500)}catch(error){message.className='status-message error-message';message.textContent=error.message;toast(error.message,'error')}finally{button.disabled=false}}
+forms.login.addEventListener('submit',event=>{event.preventDefault();submitAuth(forms.login,'/admin/login',document.querySelector('[data-auth-message]'));});
+forms.register.addEventListener('submit',event=>{event.preventDefault();submitAuth(forms.register,'/api/client/register',document.querySelector('[data-register-message]'));});
+</script></body></html>
