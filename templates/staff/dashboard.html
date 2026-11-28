@@ -8,10 +8,12 @@
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="../client/index.html">🧋 Milky Leaf</a>
+    <a class="brand" href="/staff/index.html">🧋 Milky Leaf - Staff</a>
     <nav class="site-nav">
-      <a href="../client/index.html">Trang chủ</a>
-      <a href="../client/storeproduct.html">Sản phẩm</a>
+      <a href="/staff/orders.html">Đơn hàng</a>
+      <a href="/staff/products.html">Sản phẩm</a>
+      <a href="/staff/bills.html">Hóa đơn</a>
+      <a href="/staff/dashboard.html">Thống kê</a>
     </nav>
     <div class="auth-actions">
       <span class="role-badge">Staff</span>
@@ -20,14 +22,18 @@
   </header>
   <main>
     <section class="section">
-      <h1>Bảng điều khiển nhân viên</h1>
-      <p>Khu vực staff: duyệt/hủy đơn, hóa đơn, báo cáo, sản phẩm.</p>
+      <h1>Bảng điều khiển thống kê</h1>
+      <form class="filter-bar" id="report-filter"><label>Từ ngày <input type="date" name="from"></label><label>Đến ngày <input type="date" name="to"></label><button class="btn btn-primary">Xem báo cáo</button></form>
+      <div class="product-grid" data-summary></div>
     </section>
   </main>
   <script>
+    const money=n=>new Intl.NumberFormat('vi-VN').format(Number(n)||0)+'đ';
+    async function load(){const f=new FormData(document.getElementById('report-filter')),r=await fetch('/staff/api/report?'+new URLSearchParams(f),{credentials:'same-origin'}),d=await r.json();if(!d.ok)return alert(d.error||'Không tải được báo cáo');const s=d.summary;document.querySelector('[data-summary]').innerHTML=`<article class="product-card"><h3>Doanh thu</h3><p><strong>${money(s.revenue)}</strong></p></article><article class="product-card"><h3>Đơn hoàn thành</h3><p><strong>${s.approved}</strong></p></article><article class="product-card"><h3>Đơn hủy</h3><p><strong>${s.cancelled}</strong></p></article><article class="product-card"><h3>Đơn chờ duyệt</h3><p><strong>${s.pending}</strong></p></article>`} 
+    document.getElementById('report-filter').addEventListener('submit',e=>{e.preventDefault();load()});load();
     async function logout() {
       await fetch('/admin/logout', { method: 'POST', credentials: 'same-origin' });
-      window.location.href = '../client/login.html';
+      window.location.href = '/client/login.html';
     }
   </script>
 </body>

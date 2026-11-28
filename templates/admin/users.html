@@ -8,11 +8,9 @@
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="../client/index.html">🧋 Milky Leaf</a>
+    <a class="brand" href="/admin/users.html">🧋 Milky Leaf - Admin</a>
     <nav class="site-nav">
-      <a href="../client/index.html">Trang chủ</a>
-      <a href="users.html">Người dùng</a>
-      <a href="../staff/dashboard.html">Báo cáo</a>
+      <a href="/admin/users.html">Người dùng</a>
     </nav>
     <div class="auth-actions">
       <span class="role-badge">Admin</span>
@@ -58,6 +56,7 @@
               <th>ID</th>
               <th>Tên đăng nhập</th>
               <th>Vai trò</th>
+              <th>Trạng thái</th>
               <th>Thao tác</th>
             </tr>
           </thead>
@@ -82,8 +81,10 @@
           <td>${user.id}</td>
           <td>${user.username}</td>
           <td><span class="role-badge">${user.role}</span></td>
+          <td>${user.active ? 'Đang hoạt động' : 'Đã khóa'}</td>
           <td>
             <button class="btn btn-small" onclick="editUser(${user.id}, '${user.username}', '${user.role}')">Sửa</button>
+            <button class="btn btn-small" onclick="toggleUser(${user.id}, ${user.active ? 0 : 1})">${user.active ? 'Khóa' : 'Mở khóa'}</button>
             <button class="btn btn-small" onclick="deleteUser(${user.id})">Xóa</button>
           </td>
         </tr>
@@ -104,6 +105,21 @@
       form.id.value = '';
       submitBtn.textContent = 'Thêm người dùng';
       cancelBtn.hidden = true;
+    }
+
+    async function toggleUser(id, active) {
+      const res = await fetch('/admin/api/users/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ active })
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        alert(data.error || 'Cập nhật thất bại');
+        return;
+      }
+      loadUsers();
     }
 
     async function deleteUser(id) {
@@ -149,7 +165,7 @@
 
     async function logout() {
       await fetch('/admin/logout', { method: 'POST', credentials: 'same-origin' });
-      window.location.href = '../client/login.html';
+      window.location.href = '/client/login.html';
     }
 
     loadUsers();

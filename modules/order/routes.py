@@ -17,6 +17,8 @@ def transition_response(order_id, target_status):
             return jsonify({"ok": False, "error": "Không tìm thấy đơn hàng."}), 404
         if error == "invalid_transition":
             return jsonify({"ok": False, "error": "Chỉ đơn đang chờ mới có thể được duyệt hoặc hủy."}), 409
+        if error == "insufficient_stock":
+            return jsonify({"ok": False, "error": "Tồn kho không đủ để duyệt đơn hàng."}), 409
         if error:
             return jsonify({"ok": False, "error": "Không thể cập nhật tồn kho cho đơn này."}), 409
         return jsonify({"ok": True, "order": result})
@@ -44,7 +46,7 @@ def list_orders():
         orders = db.execute("SELECT o.id, o.status, o.total, o.created_at, o.customer_name, o.phone, o.delivery_address, u.username FROM orders o JOIN users u ON u.id = o.customer_id ORDER BY o.id DESC").fetchall()
         result = []
         for order in orders:
-            items = db.execute("SELECT p.name, oi.quantity, oi.price FROM order_items oi LEFT JOIN products p ON p.id = oi.product_id WHERE oi.order_id = ? ORDER BY oi.id", (order["id"],)).fetchall()
+            items = db.execute("SELECT p.name, p.stock, oi.quantity, oi.price FROM order_items oi LEFT JOIN products p ON p.id = oi.product_id WHERE oi.order_id = ? ORDER BY oi.id", (order["id"],)).fetchall()
             result.append({**dict(order), "items": [dict(item) for item in items]})
         return jsonify({"ok": True, "orders": result})
     except sqlite3.OperationalError:

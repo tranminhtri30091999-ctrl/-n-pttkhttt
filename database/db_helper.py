@@ -6,7 +6,7 @@ DB_PATH = os.path.join(BASE_DIR, "database.db")
 SCHEMA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "schema.sql")
 
 DEMO_PRODUCTS = [
-    ("Trà sữa trân châu", 45000, 24, "Trà sữa thơm béo kết hợp trân châu dai giòn.", "Trà sữa"),
+    ("Trà sữa truyền thống", 45000, 24, "Trà sữa thơm béo kết hợp trân châu dai giòn.", "Trà sữa"),
     ("Trà sữa matcha", 50000, 18, "Matcha thơm dịu, vị trà xanh cân bằng cùng sữa tươi.", "Trà sữa"),
     ("Trà sữa khoai môn", 48000, 12, "Khoai môn bùi mịn, thơm ngon và dễ uống.", "Trà sữa"),
     ("Trà sữa chocolate", 52000, 9, "Chocolate đậm vị dành cho tín đồ cacao.", "Trà sữa"),
@@ -57,6 +57,12 @@ def init_db():
         product_columns = {row["name"] for row in conn.execute("PRAGMA table_info(products)")}
         if "category" not in product_columns:
             conn.execute("ALTER TABLE products ADD COLUMN category TEXT NOT NULL DEFAULT 'Khác'")
+        if "image_url" not in product_columns:
+            conn.execute("ALTER TABLE products ADD COLUMN image_url TEXT NOT NULL DEFAULT ''")
+
+        user_columns = {row["name"] for row in conn.execute("PRAGMA table_info(users)")}
+        if "active" not in user_columns:
+            conn.execute("ALTER TABLE users ADD COLUMN active INTEGER NOT NULL DEFAULT 1")
 
         if conn.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0:
             from werkzeug.security import generate_password_hash

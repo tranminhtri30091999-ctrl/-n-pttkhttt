@@ -8,12 +8,12 @@
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="../client/index.html">🧋 Milky Leaf</a>
+    <a class="brand" href="/staff/index.html">🧋 Milky Leaf - Staff</a>
     <nav class="site-nav">
-      <a href="../client/index.html">Trang chủ</a>
-      <a href="products.html">Sản phẩm</a>
-      <a href="orders.html">Đơn hàng</a>
-      <a href="dashboard.html">Báo cáo</a>
+      <a href="/staff/orders.html">Đơn hàng</a>
+      <a href="/staff/products.html">Sản phẩm</a>
+      <a href="/staff/bills.html">Hóa đơn</a>
+      <a href="/staff/dashboard.html">Thống kê</a>
     </nav>
     <div class="auth-actions">
       <span class="role-badge">Staff</span>
@@ -23,13 +23,18 @@
   <main>
     <section class="section">
       <h1>Hóa đơn bán hàng</h1>
-      <p>Xem và in hóa đơn theo thời điểm tùy chọn.</p>
+      <form class="filter-bar" id="bill-filter"><label>Từ ngày <input type="date" name="from"></label><label>Đến ngày <input type="date" name="to"></label><button class="btn btn-primary">Lọc</button></form>
+      <p class="status-message" data-message></p><div class="table-wrap"><table class="admin-table"><thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Sản phẩm</th><th>Tổng tiền</th><th>Ngày</th><th>Thao tác</th></tr></thead><tbody data-bills></tbody></table></div>
     </section>
   </main>
   <script>
+    const money=n=>new Intl.NumberFormat('vi-VN').format(Number(n)||0)+'đ';
+    async function load(){const f=new FormData(document.getElementById('bill-filter')),q=new URLSearchParams(f);const r=await fetch('/staff/api/invoices?'+q,{credentials:'same-origin'}),d=await r.json();const msg=document.querySelector('[data-message]'),body=document.querySelector('[data-bills]');if(!d.ok){msg.textContent=d.error||'Không tải được';return}msg.textContent=d.invoices.length?'':'Không có hóa đơn trong khoảng thời gian đã chọn.';body.innerHTML=d.invoices.map(o=>`<tr><td>#${o.id}</td><td>${o.customer_name}<br>${o.phone}</td><td>${o.items.map(i=>i.name+' × '+i.quantity).join('<br>')}</td><td>${money(o.total)}</td><td>${o.created_at}</td><td><button class="btn btn-small" data-print="${o.id}">In</button></td></tr>`).join('')}
+    document.querySelector('[data-bills]').addEventListener('click',e=>{const b=e.target.closest('[data-print]');if(b){const tr=b.closest('tr');const w=window.open('','_blank');w.document.write(`<html><head><title>Hóa đơn #${b.dataset.print}</title></head><body>${tr.outerHTML}<script>window.onload=()=>window.print()<\\/script></body></html>`);w.document.close()}});
+    document.getElementById('bill-filter').addEventListener('submit',e=>{e.preventDefault();load()});load();
     async function logout() {
       await fetch('/admin/logout', { method: 'POST', credentials: 'same-origin' });
-      window.location.href = '../client/login.html';
+      window.location.href = '/client/login.html';
     }
   </script>
 </body>

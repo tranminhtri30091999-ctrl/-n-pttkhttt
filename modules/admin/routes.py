@@ -37,10 +37,11 @@ def login():
     data = request.get_json(silent=True) or request.form
     username = (data.get("username") or "").strip()
     password = data.get("password") or ""
+    selected_role = (data.get("role") or "").strip()
 
     db = get_db()
     user = db.execute(
-        "SELECT id, username, password_hash, role FROM users WHERE username = ?",
+        "SELECT id, username, password_hash, role, active FROM users WHERE username = ?",
         (username,),
     ).fetchone()
     db.close()
@@ -49,6 +50,10 @@ def login():
 
     if user is None or not check_password_hash(user["password_hash"], password):
         return jsonify({"ok": False, "error": "Invalid username or password"}), 401
+    if user["active"] == 0:
+        return jsonify({"ok": False, "error": "Tài khoản đã bị khóa"}), 403
+    if selected_role and selected_role != user["role"]:
+        return jsonify({"ok": False, "error": "Vai trò đăng nhập không khớp với tài khoản"}), 403
 
     session["user_id"] = user["id"]
     session["username"] = user["username"]
@@ -96,7 +101,7 @@ def users_page():
 @role_required("admin")
 def list_users():
     db = get_db()
-    rows = db.execute("SELECT id, username, role, created_at FROM users ORDER BY id").fetchall()
+    rows = db.execute("SELECT id, username, role, active, created_at FROM users ORDER BY id").fetchall()
     db.close()
     return jsonify({"ok": True, "users": [dict(row) for row in rows]})
 
@@ -137,9 +142,12 @@ def update_user(user_id):
     username = (data.get("username") or "").strip()
     password = data.get("password") or ""
     role = data.get("role")
+    active = data.get("active")
 
     if role is not None and role not in ("admin", "staff", "customer"):
         return jsonify({"ok": False, "error": "Invalid role"}), 400
+    if active is not None and active not in (0, 1, True, False):
+        return jsonify({"ok": False, "error": "Invalid active state"}), 400
 
     db = get_db()
     user = db.execute("SELECT id FROM users WHERE id = ?", (user_id,)).fetchone()
@@ -155,6 +163,9 @@ def update_user(user_id):
     if role:
         fields.append("role = ?")
         values.append(role)
+    if active is not None:
+        fields.append("active = ?")
+        values.append(1 if active else 0)
     if password:
         from werkzeug.security import generate_password_hash
 
@@ -180,7 +191,12 @@ def delete_user(user_id):
         return jsonify({"ok": False, "error": "Cannot delete your own account"}), 400
 
     db = get_db()
-    db.execute("DELETE FROM users WHERE id = ?", (user_id,))
-    db.commit()
-    db.close()
+    try:
+        if db.execute("SELECT 1 FROM orders WHERE customer_id = ? LIMIT 1", (user_id,)).fetchone():
+            db.close()
+            return jsonify({"ok": False, "error": "Không thể xóa tài khoản đã có đơn hàng. Hãy khóa tài khoản."}), 409
+        db.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        db.commit()
+    finally:
+        db.close()
     return jsonify({"ok": True})

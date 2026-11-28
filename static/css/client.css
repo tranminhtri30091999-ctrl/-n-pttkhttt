@@ -35,6 +35,8 @@ main { width: min(1180px,calc(100% - 2rem)); margin: 0 auto; padding: 2rem 0 4re
 .product-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 1.25rem; }
 .product-card { background: var(--surface); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1rem; box-shadow: var(--shadow); }
 .product-image { height: 150px; display: grid; place-items: center; font-size: 4rem; border-radius: 1rem; background: linear-gradient(135deg,#f7d8c7,#f2e7dd); margin-bottom: 1rem; }
+.product-image img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.detail-product-image { width: 100%; height: 100%; max-height: 420px; object-fit: cover; border-radius: inherit; }
 .product-card h3 { margin: 0 0 .35rem; }
 .product-card h3 a:hover { color: var(--brand); }
 .price { margin: 0 0 .25rem; font-weight: 800; color: var(--brand); }

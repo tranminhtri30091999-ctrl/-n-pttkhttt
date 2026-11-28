@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, redirect
+from flask import Flask, redirect, session
 
 from database.db_helper import init_db
 from modules.admin.routes import admin_bp
@@ -23,6 +23,11 @@ app.register_blueprint(report_bp, url_prefix="/staff")
 
 @app.route("/")
 def root():
+    role = session.get("role")
+    if role == "admin":
+        return redirect("/admin/users.html")
+    if role == "staff":
+        return redirect("/staff/index.html")
     return redirect("/client/index.html")
 
 

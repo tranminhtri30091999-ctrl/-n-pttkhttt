@@ -21,7 +21,7 @@ def customer_api_required():
 
 
 def product_dict(row):
-    return {"id": row["id"], "name": row["name"], "price": row["price"], "stock": row["stock"], "description": row["description"] or "", "category": row["category"] or "Khác"}
+    return {"id": row["id"], "name": row["name"], "price": row["price"], "stock": row["stock"], "description": row["description"] or "", "category": row["category"] or "Khác", "image_url": row["image_url"] if "image_url" in row.keys() else ""}
 
 
 @client_bp.route("/")
@@ -64,19 +64,22 @@ def register_customer():
     data = request.get_json(silent=True) or {}
     username = (data.get("username") or "").strip()
     password = data.get("password") or ""
+    role = (data.get("role") or "customer").strip()
     if not re.fullmatch(r"[A-Za-z0-9_.-]{3,30}", username):
         return jsonify({"ok": False, "error": "Tên đăng nhập cần dài 3–30 ký tự (chữ, số, ., _ hoặc -)."}), 400
     if len(password) < 8 or len(password) > 128:
         return jsonify({"ok": False, "error": "Mật khẩu cần dài từ 8 đến 128 ký tự."}), 400
+    if role not in ("customer", "staff"):
+        return jsonify({"ok": False, "error": "Vai trò đăng ký không hợp lệ."}), 400
     db = get_db()
     try:
-        cursor = db.execute("INSERT INTO users (username, password_hash, role) VALUES (?, ?, 'customer')", (username, generate_password_hash(password)))
+        cursor = db.execute("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)", (username, generate_password_hash(password), role))
         db.commit()
         session.clear()
         session["user_id"] = cursor.lastrowid
         session["username"] = username
-        session["role"] = "customer"
-        return jsonify({"ok": True, "user": {"id": cursor.lastrowid, "username": username, "role": "customer"}}), 201
+        session["role"] = role
+        return jsonify({"ok": True, "user": {"id": cursor.lastrowid, "username": username, "role": role}}), 201
     except sqlite3.IntegrityError:
         db.rollback()
         return jsonify({"ok": False, "error": "Tên đăng nhập đã được sử dụng."}), 409
@@ -121,7 +124,7 @@ def list_products():
     if max_price is not None:
         clauses.append("price <= ?")
         params.append(max_price)
-    sql = "SELECT id, name, price, stock, description, category FROM products"
+    sql = "SELECT id, name, price, stock, description, category, image_url FROM products"
     if clauses:
         sql += " WHERE " + " AND ".join(clauses)
     sql += " ORDER BY category COLLATE NOCASE, name COLLATE NOCASE, id"
@@ -137,7 +140,7 @@ def list_products():
 def get_product(product_id):
     db = get_db()
     try:
-        row = db.execute("SELECT id, name, price, stock, description, category FROM products WHERE id = ?", (product_id,)).fetchone()
+        row = db.execute("SELECT id, name, price, stock, description, category, image_url FROM products WHERE id = ?", (product_id,)).fetchone()
         if row is None:
             return jsonify({"ok": False, "error": "Không tìm thấy sản phẩm."}), 404
         return jsonify({"ok": True, "product": product_dict(row)})
@@ -207,7 +210,6 @@ def create_customer_order():
         for product_id, quantity in quantities.items():
             product = products[product_id]
             db.execute("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)", (order_id, product_id, quantity, product["price"]))
-            db.execute("UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?", (quantity, product_id, quantity))
         db.commit()
         return jsonify({"ok": True, "order_id": order_id, "total": total}), 201
     except sqlite3.OperationalError:

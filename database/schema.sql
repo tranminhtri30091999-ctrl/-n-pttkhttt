@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
     username TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL CHECK (role IN ('admin', 'staff', 'customer')),
+    active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)),
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -13,6 +14,7 @@ CREATE TABLE IF NOT EXISTS products (
     stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
     description TEXT,
     category TEXT NOT NULL DEFAULT 'Khác',
+    image_url TEXT NOT NULL DEFAULT '',
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
