@@ -1,7 +1,9 @@
--- Dữ liệu demo cho trang Quản trị bán hàng.
--- init_db() chạy file này khi bảng products còn trống.
+-- Dữ liệu demo cho toàn bộ hệ thống (hỗ trợ chạy độc lập sau schema.sql hoặc qua init_db()).
 
 INSERT OR IGNORE INTO users (username, password_hash, role) VALUES
+    ('admin', 'scrypt:32768:8:1$T3hGwUFW8dEeJE7I$92e50024d879dc4bd73dadd98e65fa6c420c9bcdc51c2db50f3bff01e59f977d22c2c0597388b772bf9f311b68d93d3f97a19d0d56aa329fd8fc91ae9ebeff27', 'admin'),
+    ('staff', 'scrypt:32768:8:1$l3sbgPieMyX5aK52$ff29af62b3d0c6861814a07f4ad2d27ca1a17cf16e77994a93778c1cbf719926c677c8eaa29403bbcb788a5f278244324fb5239e51d82036785ce0b58ffebddc', 'staff'),
+    ('customer', 'scrypt:32768:8:1$vbSWyaSg0FicHZdg$f824e3f23cd7e80f8b01b43df9ff5d0d25023f1eee2681f71df7e521c026da7f70663c5d34037eb6a4e719af4e5315a24cd9680cec93ba7522a0645552db26d6', 'customer'),
     ('kh_minh', 'scrypt:32768:8:1$9a6vhbUrOY7UXDpw$f8e7530c6bd6764143938444db287adb784fa23a488f710be697ba1b22298e5c6c792eb08155fce2e21a528e602df9bbd54aeac4ab085d02c12f93ac2ed4ec26', 'customer'),
     ('kh_tuan', 'scrypt:32768:8:1$9a6vhbUrOY7UXDpw$f8e7530c6bd6764143938444db287adb784fa23a488f710be697ba1b22298e5c6c792eb08155fce2e21a528e602df9bbd54aeac4ab085d02c12f93ac2ed4ec26', 'customer');
 

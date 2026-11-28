@@ -91,7 +91,7 @@ Hệ thống sử dụng hệ quản trị CSDL quan hệ nhẹ **SQLite** (`dat
 | :-: | :--- | :--- | :--- | :--- | :--- |
 | 1 | `id` | `INTEGER` | `PRIMARY KEY AUTOINCREMENT` | Tự tăng | Mã định danh duy nhất của sản phẩm |
 | 2 | `name` | `TEXT` | `NOT NULL` | — | Tên đồ uống / sản phẩm (tối đa 150 ký tự ở tầng nghiệp vụ) |
-| 3 | `price` | `REAL` | `NOT NULL` | — | Đơn giá bán hiện hành (VNĐ, giá trị không âm) |
+| 3 | `price` | `REAL` | `NOT NULL, CHECK (price >= 0)` | — | Đơn giá bán hiện hành (VNĐ, giá trị không âm) |
 | 4 | `stock` | `INTEGER` | `NOT NULL` | `0` | Số lượng tồn kho hiện có (số nguyên không âm) |
 | 5 | `description` | `TEXT` | `NULL` | — | Mô tả chi tiết về hương vị, thành phần sản phẩm |
 | 6 | `image_url` | `TEXT` | — | `''` | Đường dẫn nội bộ (`/static/images/products/...`) hoặc URL ảnh sản phẩm |
@@ -126,7 +126,7 @@ Hệ thống sử dụng hệ quản trị CSDL quan hệ nhẹ **SQLite** (`dat
 ---
 
 ### 2.3. Dữ liệu mẫu (Dummy Data) phục vụ Demo
-Script [seed_data.sql](../database/seed_data.sql) kết hợp cùng `init_db()` trong [db_helper.py](../database/db_helper.py) khởi tạo sẵn bộ dữ liệu demo gồm:
+Script [seed_data.sql](../database/seed_data.sql) (chạy được độc lập sau [schema.sql](../database/schema.sql) hoặc tự động qua `init_db()` trong [db_helper.py](../database/db_helper.py)) khởi tạo sẵn bộ dữ liệu demo gồm:
 - **5 tài khoản người dùng:** `admin` (`admin123`), `staff` (`staff123`), `customer` (`customer123`), `kh_minh`, `kh_tuan`.
 - **8 sản phẩm đồ uống có đầy đủ hình ảnh SVG cục bộ:** Trà sữa truyền thống, Trà đào cam sả, Sữa tươi trân châu đường đen, Trà xanh sữa, Cà phê sữa đá, Trà sữa matcha, Trà sữa khoai môn (tồn kho thấp `15` để demo cảnh báo sắp hết), Trà ô long kem cheese.
-- **6 đơn hàng mẫu** (`pending`, `approved`, `cancelled`) kèm **12 dòng `order_items`** khớp tổng tiền để demo ngay nghiệp vụ duyệt/hủy đơn, trừ/hoàn kho và in hóa đơn.
+- **6 đơn hàng mẫu** (`pending`, `approved`, `cancelled`), **12 dòng `order_items`** khớp tổng tiền và **1 hóa đơn mẫu** (`id = 1`, `order_id = 200000015`) để demo ngay nghiệp vụ duyệt/hủy đơn, trừ/hoàn kho, in và lưu hóa đơn.
